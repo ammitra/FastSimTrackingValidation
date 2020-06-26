@@ -5,13 +5,13 @@
 # added arguments to run() and changed options parsing to OptionsFromItems()
 
 from __future__ import print_function
-def run(argList: list):
+def run(argList):
         import sys
         import os
         import Configuration.Applications
         from Configuration.Applications.ConfigBuilder import ConfigBuilder
-        from Configuration.Applications.cmsDriverOptions import OptionsFromCommandLine
-        options = OptionsFromItems(argDict)
+        from Configuration.Applications.cmsDriverOptions import OptionsFromItems#CommandLine
+        options = OptionsFromItems(argList)
         
         # after cleanup of all config parameters pass it to the ConfigBuilder
         configBuilder = ConfigBuilder(options, with_output = True, with_input = True)
