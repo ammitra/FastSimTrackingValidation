@@ -1,3 +1,5 @@
+import CRABClient
+from CRABClient.UserUtilities import config
 import cmsDriverAPI, pickle, os, json
 
 from contextlib import contextmanager
@@ -17,27 +19,27 @@ def MakeCrabConfig(stepname, tag, files=[]):
     if files == [] and ana:
         raise ValueError("You are trying to analyze but the inputFiles list is empty.")
 
-    config = config()
-    config.General.requestName = 'FastSimValidation_%s'%stepname
-    config.General.workArea = stepname
-    config.General.transferOutputs = True
-    config.JobType.psetName = 'FastSimValidation_%s.py'%stepname
-    config.Data.publication = False
-    config.Site.storageSite = 'T3_US_FNALLPC'
-    config.Data.outLFNDirBase = '/store/user/lcorcodi/FastSimValidation/'
-    config.Data.outputDatasetTag = tag
+    crab_config = config()
+    crab_config.General.requestName = 'FastSimValidation_%s'%stepname
+    crab_config.General.workArea = stepname
+    crab_config.General.transferOutputs = True
+    crab_config.JobType.psetName = 'FastSimValidation_%s.py'%stepname
+    crab_config.Data.publication = False
+    crab_config.Site.storageSite = 'T3_US_FNALLPC'
+    crab_config.Data.outLFNDirBase = '/store/user/lcorcodi/FastSimValidation/'
+    crab_config.Data.outputDatasetTag = tag
 
     if gen:
-        config.JobType.pluginName = 'PrivateMC'
-        config.Data.splitting = 'EventBased'
-        config.Data.unitsPerJob = 1000
+        crab_config.JobType.pluginName = 'PrivateMC'
+        crab_config.Data.splitting = 'EventBased'
+        crab_config.Data.unitsPerJob = 1000
     elif ana:
-        config.JobType.pluginName = 'Analysis'
-        config.Data.inputFiles = files
-        config.Data.splitting = 'FileBased'
-        config.Data.unitsPerJob = 1
+        crab_config.JobType.pluginName = 'Analysis'
+        crab_config.Data.inputFiles = files
+        crab_config.Data.splitting = 'FileBased'
+        crab_config.Data.unitsPerJob = 1
 
-    return config
+    return crab_config
 
 def MakeRunConfig(inputArgs):
     remove_spaces = []
@@ -45,8 +47,9 @@ def MakeRunConfig(inputArgs):
         s = a.split(' ')
         for p in s:
             if p != '': remove_spaces.append(p)
-
-    driver_args = ['--noexec'].extend(remove_spaces)
+    driver_args = ['--noexec']
+    driver_args.extend(remove_spaces)
+    print (driver_args)
     cmsDriverAPI.run(driver_args)
 
 #--------------------Helpers-----------------------------------------#
@@ -65,7 +68,7 @@ def ParseSteps(allBool,steps):
                 out[step] = True
             else:
                 out[step] = False
-
+    print ('Will process %s'%out)
     return out
 
 def GetWorkingArea(cmssw,testdir):
@@ -82,10 +85,11 @@ def GetWorkingArea(cmssw,testdir):
     return working_location
 
 def LoadMaker(name):
-    if os.exists(name):
+    if os.path.exists(name):
         return pickle.load(open(name, "rb"))
     else:
-        raise ValueError('Attempt to load `%s` which does not exist.'%name)
+        print ('Attempt to load `%s` which does not exist.'%name)
+        return False
 
 def SaveToJson(path,outdict):
     out = open(path,'w')
