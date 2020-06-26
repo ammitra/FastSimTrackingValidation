@@ -126,7 +126,7 @@ def SaveToJson(path,outdict: dict):
 
 @contextmanager
 def cd(newdir):
-    print 'cd '+newdir
+    print ('cd '+newdir)
     prevdir = os.getcwd()
     os.chdir(os.path.expanduser(newdir))
     try:

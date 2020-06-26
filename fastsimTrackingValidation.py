@@ -85,7 +85,7 @@ class Maker(object):
     def checkDone(self):
         status = crabCommand('status',dir = self.crabDir)
         if status['status'] == 'COMPLETED':
-            print 'Job %s COMPLETED'%self.crabDir
+            print ('Job %s COMPLETED'%self.crabDir)
             done = True
         else:
             done = False
