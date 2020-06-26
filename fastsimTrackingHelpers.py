@@ -68,39 +68,6 @@ def ParseSteps(allBool,steps):
 
     return out
 
-def GetMakers(step_bools,indir=''):
-    makers = OrderedDict()
-    # AOD
-    if step_bools['AOD']:
-        makers['AOD'] = MakeAOD()
-    else:
-        makers['AOD'] = LoadMaker('AOD/AOD.p')
-    # TRACKVAL
-    if step_bools['TRACKVAL']:
-        makers['TRACKVAL'] = MakeTrackVal(makers['AOD'])
-    else:
-        makers['TRACKVAL'] = LoadMaker('TRACKVAL/TRACKVAL.p')
-    # MINIAOD
-    if step_bools['MINIAOD']:
-        makers['MINIAOD'] = MakeMiniAOD(makers['AOD'])
-    else:
-        makers['MINIAOD'] = LoadMaker('MINIAOD/MINIAOD.p')
-    # BTAGVAL
-    if step_bools['BTAGVAL']:
-        makers['BTAGVAL'] = MakeBtagVal(makers['MINIAOD'])
-    else:
-        makers['BTAGVAL'] = LoadMaker('BTAGVAL/BTAGVAL.p')
-    # NANOAOD
-    if step_bools['NANOAOD']:
-        makers['NANOAOD'] = MakeNanoAOD(makers['MINIAOD'])
-    else:
-        makers['NANOAOD'] = LoadMaker('NANOAOD/NANOAOD.p')
-    # HAMMER
-    if step_bools['HAMMER']:
-        makers['HAMMER'] = MakeHAMMER(makers['NANOAOD'])
-    else:
-        makers['HAMMER'] = LoadMaker('HAMMER/HAMMER.p')
-
 def GetWorkingArea(cmssw,testdir):
     working_location = testdir+'/'+cmssw+'/src'
 
