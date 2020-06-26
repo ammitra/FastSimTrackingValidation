@@ -75,10 +75,10 @@ class Maker(object):
     def checkExists(self):
         if self.savename == '':
             raise ValueError('Savename is empty. Cannot check for existence.')
-        else:
-            exists = helper.MakerExists(self.savename)
-            if exists:
-                print('WARNING: %s has already been made.'%self.savename)
+
+        exists = os.exists(self.savename)
+        if exists:
+            print('WARNING: %s has already been made.'%self.savename)
 
         return exists
     # Check if self crab job finished
@@ -135,7 +135,7 @@ class MakeTrackVal(Maker):
         
     def run():
         self.wait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o harvestTracks.root'%(eos_path+)
+        harvest_cmd = 'harvestTrackValidationPlots.py %s -o harvestTracks.root'%(eos_path+self.prev.crab_config.Data.outputDatasetTag)
         harvest = subprocess.Popen(harvest_cmd.split(' '))
         # harvest.wait()
         # subprocess.Popen('makeTrackValidationPlots.py %s -o tracking_plots'%(eos_path+self.prev.crabDir))

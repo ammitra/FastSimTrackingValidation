@@ -113,18 +113,11 @@ def GetWorkingArea(cmssw,testdir):
     
     return working_location
 
-
 def LoadMaker(name):
-    if MakerExists(name):
+    if os.exists(name):
         return pickle.load(open(name, "rb"))
     else:
         raise ValueError('Attempt to load `%s` which does not exist.'%name)
-
-def MakerExists(name):
-    if os.exists(name):
-        return True
-    else:
-        return False
 
 def SaveToJson(path,outdict: dict):
     out = open(path,'w')
