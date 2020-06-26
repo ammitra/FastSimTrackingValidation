@@ -1,9 +1,10 @@
 import cmsDriverAPI, pickle, os, json
 
+from contextlib import contextmanager
 from collections import OrderedDict
 
 #------------CMS interfacing-----------------------------------------#
-def MakeCrabConfig(stepname: str, tag: str, files=[]):
+def MakeCrabConfig(stepname, tag, files=[]):
     if stepname in ['AOD','MINIAOD','NANOAOD']:
         gen = True
         ana = False
@@ -49,7 +50,7 @@ def MakeRunConfig(inputArgs):
     cmsDriverAPI.run(driver_args)
 
 #--------------------Helpers-----------------------------------------#
-def ParseSteps(allBool,steps);
+def ParseSteps(allBool,steps):
     step_list = steps.split(',')
     all_steps = ['AOD','TRACKVAL','MINIAOD','BTAGVAL','NANOAOD','HAMMER']
     out = {}
@@ -119,7 +120,7 @@ def LoadMaker(name):
     else:
         raise ValueError('Attempt to load `%s` which does not exist.'%name)
 
-def SaveToJson(path,outdict: dict):
+def SaveToJson(path,outdict):
     out = open(path,'w')
     out.write(json.dumps(outdict))
     out.close()

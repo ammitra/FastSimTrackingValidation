@@ -21,9 +21,9 @@ parser.add_option('--cmssw', metavar='F', type='string', action='store',
                 help    =   'CMSSW release to use')
 parser.add_option("--ALL", action="store_true", 
                 default =   False,
-                dest    =   "ALL",
+                dest    =   "all",
                 help    =   "Run full workflow")
-parser.add_option("--steps", action="string", 
+parser.add_option("--steps", type='string', action="store", 
                 default =   '',
                 dest    =   "steps",
                 help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,HAMMER.")
@@ -210,9 +210,8 @@ if __name__ == '__main__':
     step_bools = helper.ParseSteps(options.all,options.steps)
     working_dir = helper.GetWorkingArea(options.cmssw,options.dir)
 
-    with cd(working_dir):
-        cmsenv = subprocess.Popen(['cmsenv'])
-        cmsenv.wait()
+    with helper.cd(working_dir):
+        subprocess.call(["eval `scramv1 runtime -sh`"],shell=True)
         makers = helper.GetMakers(step_bools)
 
         for m in makers:
