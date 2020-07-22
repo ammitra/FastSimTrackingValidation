@@ -10,7 +10,7 @@ from fastsimTrackingValidation import *
 def ParseSteps(allBool,steps):
     step_list = steps.split(',')
     all_steps = ['AOD','TRACKVAL','BTAGVAL','MINIAOD','NANOAOD','ANALYSIS']
-    out = {}
+    out = OrderedDict()
 
     if allBool:
         for s in all_steps:
@@ -22,14 +22,14 @@ def ParseSteps(allBool,steps):
                 out[step] = True
             else:
                 out[step] = False
-    print ('Will process %s'%out)
+    print ('Will process %s'%[s for s in out.keys() if out[s] == True])
     return out
 
 def GetWorkingArea(cmssw,testdir):
     working_location = testdir+'/'+cmssw+'/src'
 
     if os.path.isdir(working_location):
-        working_location+='/FastSimValidation'
+        working_location+='/FastSimValWorkspace'
         if not os.path.isdir(working_location):
             print('mkdir '+working_location)
             os.mkdir(working_location)
@@ -40,36 +40,24 @@ def GetWorkingArea(cmssw,testdir):
 
 def GetMakers(step_bools,options):
     makers = OrderedDict()
-    # AOD - no reliance
-    if step_bools['AOD']:
-        makers['AOD'] = MakeAOD(options)
-    else:
-        makers['AOD'] = LoadMaker('AOD/AOD.p')
-    # TRACKVAL - relies on AOD/DQM
-    if step_bools['TRACKVAL']:
-        makers['TRACKVAL'] = MakeTrackVal(makers['AOD'],options)
-    else:
-        makers['TRACKVAL'] = LoadMaker('TRACKVAL/TRACKVAL.p')
-    # BTAGVAL - relies on AOD/DQM
-    if step_bools['BTAGVAL']:
-        makers['BTAGVAL'] = MakeBtagVal(makers['AOD'],options)
-    else:
-        makers['BTAGVAL'] = LoadMaker('BTAGVAL/BTAGVAL.p')
-    # MINIAOD - relies on AOD
-    if step_bools['MINIAOD']:
-        makers['MINIAOD'] = MakeMiniAOD(makers['AOD'],options)
-    else:
-        makers['MINIAOD'] = LoadMaker('MINIAOD/MINIAOD.p')
-    # NANOAOD - relies on MINIAOD
-    if step_bools['NANOAOD']:
-        makers['NANOAOD'] = MakeNanoAOD(makers['MINIAOD'],options)
-    else:
-        makers['NANOAOD'] = LoadMaker('NANOAOD/NANOAOD.p')
-    # ANALYSIS - relies on NANOAOD
-    if step_bools['ANALYSIS']:
-        makers['ANALYSIS'] = MakeAnalysis(makers['NANOAOD'],options)
-    else:
-        makers['ANALYSIS'] = LoadMaker('ANALYSIS/ANALYSIS.p')
+    
+    for step_name in step_bools.keys():
+        if step_bools[step_name]:
+            if step_name == 'AOD': # AOD - no reliance
+                makers[step_name] = MakeAOD(options)
+            elif step_name == 'TRACKVAL': # TRACKVAL - relies on AOD/DQM
+                makers[step_name] = MakeTrackVal(makers['AOD'],options)
+            elif step_name == 'BTAGVAL': # BTAGVAL - relies on AOD/DQM
+                makers[step_name] = MakeBtagVal(makers['AOD'],options)
+            elif step_name == 'MINIAOD': # MINIAOD - relies on AOD
+                makers[step_name] = MakeMiniAOD(makers['AOD'],options)
+            elif step_name == 'NANOAOD': # NANOAOD - relies on MINIAOD
+                makers[step_name] = MakeNanoAOD(makers['MINIAOD'],options)
+            elif step_name == 'ANALYSIS': # ANALYSIS - relies on NANOAOD
+                makers[step_name] = MakeAnalysis(makers['NANOAOD'],options)
+        else:
+            # Returns None and warning message if it doesn't exist
+            makers[step_name] = LoadMaker('{0}/{0}.p'.format(step_name))
  
     return makers
 
@@ -77,8 +65,8 @@ def LoadMaker(name):
     if os.path.exists(name):
         return pickle.load(open(name, "rb"))
     else:
-        print ('Attempt to load `%s` which does not exist.'%name)
-        return False
+        print ('WARNING: Not making step {0} and cannot find {0}/{0}.p. Further steps may not run.'.format(step_name))
+        return None
 
 def SaveToJson(path,outdict):
     out = open(path,'w')

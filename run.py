@@ -70,8 +70,7 @@ if __name__ == '__main__':
         makers = helper.GetMakers(step_bools,options)
 
         for m in makers.keys():
-            make = makers[m]
-            if not make: continue
-            #m.setDir(options.dir)
-            make.run()
-            make.save()
+            maker = makers[m]
+            if maker == None: continue
+            maker.run()
+            maker.save()
