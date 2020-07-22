@@ -1,47 +1,15 @@
-#import CRABClient
 from CRABAPI.RawCommand import crabCommand
-#from CRABClient.UserUtilities import config
 
-import cmsDriverAPI, pickle, os, time, subprocess
+import cmsDriverAPI, pickle, os, time
 import fastsimTrackingHelpers as helper
 
 from collections import OrderedDict
-
-from optparse import OptionParser
-
-parser = OptionParser()
-
-parser.add_option('-n', metavar='F', type='string', action='store',
-                default =   '',
-                dest    =   'name',
-                help    =   'Name for identifying the run')
-parser.add_option('-d', metavar='F', type='string', action='store',
-                default =   '',
-                dest    =   'dir',
-                help    =   'Directory to validate')
-parser.add_option('--cmssw', metavar='F', type='string', action='store',
-                default =   'CMSSW_10_6_11',
-                dest    =   'cmssw',
-                help    =   'CMSSW release to use')
-parser.add_option("--ALL", action="store_true", 
-                default =   False,
-                dest    =   "all",
-                help    =   "Run full workflow")
-parser.add_option("--steps", type='string', action="store", 
-                default =   '',
-                dest    =   "steps",
-                help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,HAMMER.")
-
-
-(options, args) = parser.parse_args()
-
-eos_path = 'root://cmseos.fnal.gov//store/user/lcorcodi/'
 
 #----------------------Maker Classes----------------------------------#
 # Parent class of processing objects
 class Maker(object):
     """docstring for Maker"""
-    def __init__(self, stepname, prev): # name is either AOD, MINIAOD, NANOAOD, TRACKVAL, BTAGVAL, HAMMER
+    def __init__(self, stepname, prev,options): # name is either AOD, MINIAOD, NANOAOD, TRACKVAL, BTAGVAL, ANALYSIS
         super(Maker, self).__init__()
 
         # Store reference to maker this is reliant on ("True" for AOD which is the top level)
@@ -51,17 +19,17 @@ class Maker(object):
             raise TypeError('The previous object needs to be made before running this step. If the current step already exists, please load it.')
 
         # Basic initializing
-        if self.stepname in ['AOD','MINIAOD','NANOAOD']:
+        if self.stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
             self.crab = True
         else:
             self.crab = False
 
-        # THINGS GET HAIRY HERE SO THIS IS WHERE TO PICK BACK UP
-        self.localsavedir = '%s/'%stepname
-        self.savename = '%s%s.p'%(self.localsavedir,stepname) # pickle name
+        self.localsavedir = '%s/'%self.stepname
+        self.savename = '%s%s.p'%(self.localsavedir, stepname) # pickle name
         self.exists = self.checkExists() # check if pickle already exists
         if self.crab:
-            self.crab_config = helper.MakeCrabConfig(stepname, options.name) # make crab config
+            input_file = '%sfastsim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
+            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file] storageSite=options.storageSite) # make crab config
             self.crabDir = stepname+'/crab_'+self.crab_config.General.requestName # record crab task dir name
             self.cmsRun_file = 'fastsim_%s.py'%stepname
             self.submit_out = None
@@ -79,12 +47,12 @@ class Maker(object):
     def checkExists(self):
         if self.savename == '':
             raise ValueError('Savename is empty. Cannot check for existence.')
-
         exists = os.path.exists(self.savename)
         if exists:
-            print('WARNING: %s has already been made.'%self.savename)
-
+            print('WARNING: %s has already been made. Will overwrite.'%self.savename)
+        
         return exists
+
     # Check if self crab job finished
     def checkDone(self):
         status = crabCommand('status',dir = self.crabDir)
@@ -115,8 +83,8 @@ class Maker(object):
 # Fastsim AOD production
 class MakeAOD(Maker):
     """docstring for MakeAOD"""
-    def __init__(self):
-        super(MakeAOD, self).__init__('AOD',True)
+    def __init__(self,options):
+        super(MakeAOD, self).__init__('AOD',True,options)
         
         self.cmsDriver_args = [
             'TTbar_13TeV_TuneCUETP8M1_cfi',
@@ -131,24 +99,34 @@ class MakeAOD(Maker):
     def run(self):
         self.run_gen()
 
+#### Btag validation
+class MakeBtagVal(Maker):
+    """docstring for MakeBtagVal"""
+    def __init__(self, MiniAODobj,options):
+        super(MakeBtagVal, self).__init__('BTAGVAL',MiniAODobj)
+
+    def run(self):
+        self.wait()
+        pass
+
 #### Track validation 
 class MakeTrackVal(Maker):
     """docstring for MakeTrackVal"""
-    def __init__(self, AODobj):
-        super(MakeTrackVal, self).__init__('TRACKVAL',AODobj)
+    def __init__(self, AODobj,options):
+        super(MakeTrackVal, self).__init__('TRACKVAL',AODobj,options)
         
     def run(self):
         self.wait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o harvestTracks.root'%(eos_path+self.prev.crab_config.Data.outputDatasetTag)
+        harvest_cmd = 'harvestTrackValidationPlots.py %s -o harvestTracks.root'%(options.eosPath+self.prev.crab_config.Data.outputDatasetTag)
         harvest = subprocess.Popen(harvest_cmd.split(' '))
         # harvest.wait()
-        # subprocess.Popen('makeTrackValidationPlots.py %s -o tracking_plots'%(eos_path+self.prev.crabDir))
+        # subprocess.Popen('makeTrackValidationPlots.py %s -o tracking_plots'%(options.eosPath+self.prev.crabDir))
 
 ## MiniAOD production
 class MakeMiniAOD(Maker):
     """docstring for MakeMiniAOD"""
-    def __init__(self, AODobj):
-        super(MakeMiniAOD, self).__init__('MINIAOD',AODobj)
+    def __init__(self, AODobj,options):
+        super(MakeMiniAOD, self).__init__('MINIAOD',AODobj,options)
 
         self.cmsDriver_args = [
             '--filein file:fastsim_AOD.root',
@@ -161,23 +139,12 @@ class MakeMiniAOD(Maker):
 
     def run(self):
         self.run_gen()
-        
-
-#### Btag validation
-class MakeBtagVal(Maker):
-    """docstring for MakeBtagVal"""
-    def __init__(self, MiniAODobj):
-        super(MakeBtagVal, self).__init__('BTAGVAL',MiniAODobj)
-
-    def run(self):
-        self.wait()
-        pass
 
 ## NanoAOD production
 class MakeNanoAOD(Maker):
     """docstring for MakeNanoAOD"""
-    def __init__(self, MiniAODobj):
-        super(MakeNanoAOD, self).__init__('NANOAOD',MiniAODobj)
+    def __init__(self, MiniAODobj,options):
+        super(MakeNanoAOD, self).__init__('NANOAOD',MiniAODobj,options)
 
         self.cmsDriver_args = [
             '--filein file:fastsim_MINIAOD.root',
@@ -193,69 +160,20 @@ class MakeNanoAOD(Maker):
         self.run_gen()
 
 
-#### HAMMER
-class MakeHAMMER(Maker):
-    """docstring for MakeHAMMER"""
-    def __init__(self, NanoAODobj):
-        super(MakeHAMMER, self).__init__('HAMMER',NanoAODobj)
-        self.savename = 'HAMMER/HAMMER.p'
+#### ANALYSIS
+class MakeAnalysis(Maker):
+    """docstring for MakeAnalysis"""
+    def __init__(self, NanoAODobj,options):
+        super(MakeAnalysis, self).__init__('ANALYSIS',NanoAODobj,options)
+        self.savename = 'ANALYSIS/ANALYSIS.p'
         self.checkExists()
-        self.crab_config = helper.MakeCrabConfig('HAMMER')
-        self.crabDir = 'HAMMER/crab_'+self.crab_config.General.requestName
+        self.crab_config = helper.MakeCrabConfig('ANALYSIS')
+        self.crabDir = 'ANALYSIS/crab_'+self.crab_config.General.requestName
 
     def run(self):
         self.wait()
         pass
 
-def GetMakers(step_bools,indir=''):
-    makers = OrderedDict()
-    # AOD
-    if step_bools['AOD']:
-        makers['AOD'] = MakeAOD()
-    else:
-        makers['AOD'] = helper.LoadMaker('AOD/AOD.p')
-    # TRACKVAL
-    if step_bools['TRACKVAL']:
-        makers['TRACKVAL'] = MakeTrackVal(makers['AOD'])
-    else:
-        makers['TRACKVAL'] = helper.LoadMaker('TRACKVAL/TRACKVAL.p')
-    # MINIAOD
-    if step_bools['MINIAOD']:
-        makers['MINIAOD'] = MakeMiniAOD(makers['AOD'])
-    else:
-        makers['MINIAOD'] = helper.LoadMaker('MINIAOD/MINIAOD.p')
-    # BTAGVAL
-    if step_bools['BTAGVAL']:
-        makers['BTAGVAL'] = MakeBtagVal(makers['MINIAOD'])
-    else:
-        makers['BTAGVAL'] = helper.LoadMaker('BTAGVAL/BTAGVAL.p')
-    # NANOAOD
-    if step_bools['NANOAOD']:
-        makers['NANOAOD'] = MakeNanoAOD(makers['MINIAOD'])
-    else:
-        makers['NANOAOD'] = helper.LoadMaker('NANOAOD/NANOAOD.p')
-    # HAMMER
-    if step_bools['HAMMER']:
-        makers['HAMMER'] = MakeHAMMER(makers['NANOAOD'])
-    else:
-        makers['HAMMER'] = helper.LoadMaker('HAMMER/HAMMER.p')
- 
-    return makers
-#------------------------------------------------------------#
 
-if __name__ == '__main__':
-    step_bools = helper.ParseSteps(options.all,options.steps)
-    working_dir = helper.GetWorkingArea(options.cmssw,options.dir)
-
-    with helper.cd(working_dir):
-        subprocess.call(["eval `scramv1 runtime -sh`"],shell=True)
-        makers = GetMakers(step_bools)
-
-        for m in makers.keys():
-            make = makers[m]
-            if not make: continue
-            #m.setDir(options.dir)
-            make.run()
-            make.save()
 
     
