@@ -95,6 +95,13 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
+def executeCmd(cmd,bkg=False):
+    if bkg:
+        subprocess.Popen(cmd.split(' '))
+    else:
+        subprocess.call([cmd],shell=True)
+
+
 #------------CMS interfacing-----------------------------------------#
 def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC'):
     # if stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
