@@ -15,6 +15,14 @@ parser.add_option("--steps", type='string', action="store",
                 dest    =   "steps",
                 help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,ANALYSIS.")
 # Provided defaults
+parser.add_option("--ALL", action="store_true", 
+                default =   False,
+                dest    =   "all",
+                help    =   "Run full workflow")
+parser.add_option("--SCRAM", action="store_true", 
+                default =   False,
+                dest    =   "scram",
+                help    =   "Scram the area before processing")
 parser.add_option('-t','--tag', metavar='F', type='string', action='store',
                 default =   '',
                 dest    =   'tag',
@@ -54,7 +62,11 @@ if __name__ == '__main__':
     working_dir = helper.GetWorkingArea(options.cmssw,options.dir)
 
     with helper.cd(working_dir):
-        subprocess.call(["eval `scramv1 runtime -csh`"],shell=True)
+        helper.executeCmd("eval `scramv1 runtime -csh`")
+        if options.scram:
+            helper.executeCmd('scram b -j 10')
+            helper.executeCmd("eval `scramv1 runtime -csh`")
+
         makers = helper.GetMakers(step_bools,options)
 
         for m in makers.keys():
