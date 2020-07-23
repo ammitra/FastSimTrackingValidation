@@ -91,13 +91,14 @@ def executeCmd(cmd,bkg=False):
 
 
 #------------CMS interfacing-----------------------------------------#
-def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC'):
-    # if stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
-    gen = True
-    ana = False
-    # else:
-    #     gen = False
-    #     ana = True
+def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC',outLFNdir='/store/user/$USER/FastSimValidation/'):
+    # As of now, only first statement will run (but keeping functionality)
+    if stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
+        gen = True
+        ana = False
+    else:
+        gen = False
+        ana = True
 
     if files != [] and gen:
         raise ValueError("You are trying to generate but the inputFiles list is non-empty. Perhaps you meant to run an analysis script?")
@@ -108,21 +109,22 @@ def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC'):
     crab_config.General.requestName = 'FastSimValidation_%s'%stepname
     crab_config.General.workArea = stepname
     crab_config.General.transferOutputs = True
-    crab_config.JobType.psetName = 'FastSimValidation_%s.py'%stepname
+    crab_config.JobType.psetName = '%s/FastSimValidation_%s.py'%(stepname,stepname)
     crab_config.Data.publication = False
     crab_config.Site.storageSite = storageSite
-    crab_config.Data.outLFNDirBase = '/store/user/lcorcodi/FastSimValidation/'
+    crab_config.Data.outLFNDirBase = outLFNdir
     crab_config.Data.outputDatasetTag = tag
+    crab_config.Data.inputFiles = files
 
-    # if gen:
-    crab_config.JobType.pluginName = 'PrivateMC'
-    crab_config.Data.splitting = 'EventBased'
-    crab_config.Data.unitsPerJob = 1000
-    # elif ana:
-    #     crab_config.JobType.pluginName = 'Analysis'
-    #     crab_config.Data.inputFiles = files
-    #     crab_config.Data.splitting = 'FileBased'
-    #     crab_config.Data.unitsPerJob = 1
+    # Again, first statement will always be the one to execute
+    if gen:
+        crab_config.JobType.pluginName = 'PrivateMC'
+        crab_config.Data.splitting = 'EventBased'
+        crab_config.Data.unitsPerJob = 1000
+    elif ana:
+        crab_config.JobType.pluginName = 'Analysis'
+        crab_config.Data.splitting = 'FileBased'
+        crab_config.Data.unitsPerJob = 1
 
     return crab_config
 
