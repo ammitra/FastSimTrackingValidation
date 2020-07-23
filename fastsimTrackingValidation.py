@@ -47,18 +47,18 @@ class Maker(object):
 
     # Save out obj to pickle
     def save(self):
-        pickle.dump(self, open(self.savename, "wb"))
+        pickle.dump(self, open(self.picklename, "wb"))
         if self.crab:
             helper.SaveToJson('%scrab_submit.json'%self.localsavedir, self.submit_out)
-            helper.SaveToJson('%scrab_status.json'%self.localsavedir, crabCommand('status',dir = self.crabDir))
+            # helper.SaveToJson('%scrab_status.json'%self.localsavedir, crabCommand('status',dir = self.crabDir))
 
     # Check if pickled obj already exists
     def checkExists(self):
-        if self.savename == '':
-            raise ValueError('Savename is empty. Cannot check for existence.')
-        exists = os.path.exists(self.savename)
+        if self.picklename == '':
+            raise ValueError('Pickle name is empty. Cannot check for existence.')
+        exists = os.path.exists(self.picklename)
         if exists:
-            print('WARNING: %s has already been made. Will overwrite.'%self.savename)
+            print('WARNING: %s has already been made. Will overwrite.'%self.picklename)
         
         return exists
 
@@ -68,13 +68,15 @@ class Maker(object):
         if status['status'] == 'COMPLETED':
             print ('Job %s COMPLETED'%self.crabDir)
             done = True
+        elif status['status'] == 'FAILED':
+            raise Exception('Job %s has FAILED. Please attempt to fix the issue manually before attempting to rerun.'%self.crabDir)
         else:
             done = False
-        
         return done
+
     # Wait for crab job that self relies on to finish
     def wait(self):
-        if self.prev != True:
+        if self.prev != False:
             while not self.prev.checkDone():
                 time.sleep(60)
 
