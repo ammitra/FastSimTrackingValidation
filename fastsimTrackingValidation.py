@@ -6,35 +6,44 @@ import fastsimTrackingHelpers as helper
 from collections import OrderedDict
 
 #----------------------Maker Classes----------------------------------#
-# Parent class of processing objects
 class Maker(object):
-    """docstring for Maker"""
+    """Parent class of processing objects"""
     def __init__(self, stepname, prev,options): # name is either AOD, MINIAOD, NANOAOD, TRACKVAL, BTAGVAL, ANALYSIS
         super(Maker, self).__init__()
 
-        # Store reference to maker this is reliant on ("True" for AOD which is the top level)
+        # Store reference to maker this is reliant on ("False" for AOD which is the top level)
         self.stepname = stepname
         self.prev = prev
         if self.prev == None:
-            raise TypeError('The previous object needs to be made before running this step. If the current step already exists, please load it.')
+            raise TypeError('The previous object needs to be made before running this step. If the current step already exists, please make sure it is loading properly.')
 
         # Basic initializing
         if self.stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
             self.crab = True
         else:
             self.crab = False
-
         self.localsavedir = '%s/'%self.stepname
-        self.savename = '%s%s.p'%(self.localsavedir, stepname) # pickle name
+        self.picklename = '%s%s.p'%(self.localsavedir, stepname)
         self.exists = self.checkExists() # check if pickle already exists
+
+        # Crab configuration if needed
         if self.crab:
-            input_file = '%sfastsim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
-            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file] storageSite=options.storageSite) # make crab config
-            self.crabDir = stepname+'/crab_'+self.crab_config.General.requestName # record crab task dir name
-            self.cmsRun_file = 'fastsim_%s.py'%stepname
-            self.submit_out = None
+            # Get input files
+            if self.prev != False:
+                if self.prev.crab:
+                    input_file = '%sFastSim_%s*.root'%(self.prev.eosDir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
         else:
-            self.cmsRun_file = ''
+                    input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
+            else:
+                input_file = ''
+            # Get crab setup to track
+            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file], storageSite=options.storageSite) # make crab config
+            self.crabDir = self.localsavedir+'crab_'+self.crab_config.General.requestName # record crab task dir name
+            self.cmsRun_file = self.crab_config.JobType.psetName
+
+            # Set after submit
+            self.submit_out = None
+            self.eosPath = None
 
     # Save out obj to pickle
     def save(self):
