@@ -32,7 +32,7 @@ class Maker(object):
             if self.prev != False:
                 if self.prev.crab:
                     input_file = '%sFastSim_%s*.root'%(self.prev.eosDir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
-        else:
+                else:
                     input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
             else:
                 input_file = ''
@@ -99,16 +99,16 @@ class Maker(object):
 class MakeAOD(Maker):
     """docstring for MakeAOD"""
     def __init__(self,options):
-        super(MakeAOD, self).__init__('AOD',True,options)
+        super(MakeAOD, self).__init__('AOD',False,options)
         
         self.cmsDriver_args = [
-            'TTbar_13TeV_TuneCUETP8M1_cfi',
+            options.cfi,
             '--conditions auto:phase1_2018_design', 
-            '--fast', '-n 10000', '--nThreads 1',
+            '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
-            '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,RECO,VALIDATION:tracksValidationTrackingOnly',
-            '--python_filename '+self.cmsRun_file, '--fileout fastsim_AOD.root'
+            '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM',
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD.root'%self.localsavedir
         ]
 
     def run(self):
@@ -120,9 +120,16 @@ class MakeBtagVal(Maker):
     def __init__(self, MiniAODobj,options):
         super(MakeBtagVal, self).__init__('BTAGVAL',MiniAODobj)
 
+        self.cmsDriver_args = [
+            '--conditions auto:phase1_2018_realistic',
+            '--scenario pp', '-s HARVESTING:validationHarvesting',
+            '--filetype DQM', '--fast', '--mc', '--era Run2_2018_FastSim',
+            '--python '+self.cmsRun_file, '-n '+options.nevents, '--filein file:dummy.root',
+            '--fileout %sharvest.root'%self.localsavedir
+        ]
+
     def run(self):
-        self.wait()
-        pass
+        self.run_gen()
 
 #### Track validation 
 class MakeTrackVal(Maker):
@@ -132,10 +139,8 @@ class MakeTrackVal(Maker):
         
     def run(self):
         self.wait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o harvestTracks.root'%(options.eosPath+self.prev.crab_config.Data.outputDatasetTag)
-        harvest = subprocess.Popen(harvest_cmd.split(' '))
-        # harvest.wait()
-        # subprocess.Popen('makeTrackValidationPlots.py %s -o tracking_plots'%(options.eosPath+self.prev.crabDir))
+        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks.root'%(self.prev.eosPath,self.localsavedir)
+        subprocess.Popen(harvest_cmd.split(' '))
 
 ## MiniAOD production
 class MakeMiniAOD(Maker):
@@ -144,13 +149,13 @@ class MakeMiniAOD(Maker):
         super(MakeMiniAOD, self).__init__('MINIAOD',AODobj,options)
 
         self.cmsDriver_args = [
-            '--filein file:fastsim_AOD.root',
+            '--filein file:dummy.root',
             '--conditions auto:phase1_2018_design',
-            '--fast', '-n 10000', '--nThreads 1',
+            '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
             '--datatier MINIAODSIM', '--eventcontent MINIAODSIM',
             '-s PAT', '--python_filename '+self.cmsRun_file,
-            '--fileout fastsim_MINIAOD.root', '--runUnscheduled']
+            '--fileout %sFastSim_MINIAOD.root'%self.localsavedir, '--runUnscheduled']
 
     def run(self):
         self.run_gen()
@@ -162,28 +167,23 @@ class MakeNanoAOD(Maker):
         super(MakeNanoAOD, self).__init__('NANOAOD',MiniAODobj,options)
 
         self.cmsDriver_args = [
-            '--filein file:fastsim_MINIAOD.root',
+            '--filein file:dummy.root',
             '--conditions auto:phase1_2018_design',
-            '--fast', '-n 10000', '--nThreads 1',
+            '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2018,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
             '--datatier NANOAODSIM', '--eventcontent NANOAODSIM',
             '-s NANO', '--mc', '--python_filename '+self.cmsRun_file,
-            '--fileout fastsim_NANOAOD.root', '''--customise_commands="process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))"'''
+            '--fileout %sFastSim_NANOAOD.root'%self.localsavedir, '''--customise_commands="process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))"'''
         ]
 
     def run(self):
         self.run_gen()
-
 
 #### ANALYSIS
 class MakeAnalysis(Maker):
     """docstring for MakeAnalysis"""
     def __init__(self, NanoAODobj,options):
         super(MakeAnalysis, self).__init__('ANALYSIS',NanoAODobj,options)
-        self.savename = 'ANALYSIS/ANALYSIS.p'
-        self.checkExists()
-        self.crab_config = helper.MakeCrabConfig('ANALYSIS')
-        self.crabDir = 'ANALYSIS/crab_'+self.crab_config.General.requestName
 
     def run(self):
         self.wait()
