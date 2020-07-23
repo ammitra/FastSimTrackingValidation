@@ -1,1 +1,2 @@
 -e git+https://github.com/lcorcodilos/CRABTaskTracker.git#egg=CRABTaskTracker
+-e git+https://github.com/cms-btv-pog/Validation-Tools.git#egg=Validation-Tools
