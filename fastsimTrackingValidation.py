@@ -83,13 +83,17 @@ class Maker(object):
     def run_gen(self):
         self.wait()
         helper.MakeRunConfig(self.cmsDriver_args)
-        self.submit_out = crabCommand('submit',config=self.cmsRun_file)
+        if not os.path.exists(self.cmsRun_file):
+            raise Exception('%s was not created.'%self.cmsRun_file)
+        self.submit_out = crabCommand('submit',config=self.crab_config)
+        self.setEOSdir()
 
-    # def setDir(self,valdir): # id for what is being validated
-    #     self.valdir = valdir
-
-    def setCmsRunFile(self,file):
-        self.cmsRun_file = file
+    def setEOSdir(self):
+        full_request = self.submit_out['uniquerequestname']
+        first_underscore = full_request.find('_')+1
+        request_time_data = full_request[:full_request.find('_',first_underscore)]
+        self.eosPath = 'root://cmsxrootd.fnal.gov//%s/%s/%s/%s/*/%s.root'%(self.crab_config.Data.outLFNDirBase, self.crab_config.General.requestName, self.crab_config.Data.outputDatasetTag, request_time_data, self.crab_config.JobType.psetName)
+        return self.eosPath
 
 # Fastsim AOD production
 class MakeAOD(Maker):
