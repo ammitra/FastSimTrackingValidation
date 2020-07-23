@@ -43,16 +43,14 @@ parser.add_option('--storageSite', metavar='F', type='string', action='store',
                 default =   'T3_US_FNALLPC',
                 dest    =   'storageSite',
                 help    =   'CRAB storage site')
-parser.add_option('--eosPath', metavar='F', type='string', action='store',
-                default =   'root://cmseos.fnal.gov//store/user/lcorcodi/',
-                dest    =   'eosPath',
-                help    =   'EOS path')
+# parser.add_option('--eosPath', metavar='F', type='string', action='store',
+#                 default =   '',
+#                 dest    =   'eosPath',
+#                 help    =   'EOS path')
 parser.add_option("--ALL", action="store_true", 
                 default =   False,
                 dest    =   "all",
                 help    =   "Run full workflow")
-
-
 
 (options, args) = parser.parse_args()
 
