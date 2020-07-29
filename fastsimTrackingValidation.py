@@ -31,13 +31,13 @@ class Maker(object):
             # Get input files
             if self.prev != False:
                 if self.prev.crab:
-                    input_file = '%sFastSim_%s*.root'%(self.prev.eosDir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
+                    input_file = self.prev.eosPath
                 else:
                     input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
             else:
                 input_file = ''
             # Get crab setup to track
-            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file], storageSite=options.storageSite) # make crab config
+            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file], storageSite=options.storageSite,nevents=options.nevents,dataset=options.cfi) # make crab config
             self.crabDir = self.localsavedir+'crab_'+self.crab_config.General.requestName # record crab task dir name
             self.cmsRun_file = self.crab_config.JobType.psetName
 
@@ -84,7 +84,8 @@ class Maker(object):
         self.wait()
         helper.MakeRunConfig(self.cmsDriver_args)
         if not os.path.exists(self.cmsRun_file):
-            raise Exception('%s was not created.'%self.cmsRun_file)
+            raise Exception('%s was not created.'%self.cmsRun_file)        
+        print (self.crab_config)
         self.submit_out = crabCommand('submit',config=self.crab_config)
         self.setEOSdir()
 
@@ -102,13 +103,13 @@ class MakeAOD(Maker):
         super(MakeAOD, self).__init__('AOD',False,options)
         
         self.cmsDriver_args = [
-            options.cfi,
+            '--evt_type '+options.cfi,
             '--conditions auto:phase1_2018_design', 
             '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
             '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM',
-            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD.root'%self.localsavedir
+            '--python_filename '+self.cmsRun_file, '--fileout FastSim_AOD.root'
         ]
 
     def run(self):

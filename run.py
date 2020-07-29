@@ -36,7 +36,7 @@ parser.add_option('--nevents', metavar='F', type='string', action='store',
                 dest    =   'nevents',
                 help    =   'Number of events to run')
 parser.add_option('--cmssw', metavar='F', type='string', action='store',
-                default =   'CMSSW_10_6_11',
+                default =   'CMSSW_10_6_12',
                 dest    =   'cmssw',
                 help    =   'CMSSW release to use')
 parser.add_option('--storageSite', metavar='F', type='string', action='store',
@@ -47,10 +47,6 @@ parser.add_option('--storageSite', metavar='F', type='string', action='store',
 #                 default =   '',
 #                 dest    =   'eosPath',
 #                 help    =   'EOS path')
-parser.add_option("--ALL", action="store_true", 
-                default =   False,
-                dest    =   "all",
-                help    =   "Run full workflow")
 
 (options, args) = parser.parse_args()
 
@@ -69,6 +65,6 @@ if __name__ == '__main__':
 
         for m in makers.keys():
             maker = makers[m]
-            if maker == None: continue
+            if maker == None or step_bools[m] == False: continue
             maker.run()
             maker.save()
