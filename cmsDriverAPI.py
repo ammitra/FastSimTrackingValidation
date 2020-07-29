@@ -12,7 +12,8 @@ def run(argList):
         from Configuration.Applications.ConfigBuilder import ConfigBuilder
         from Configuration.Applications.cmsDriverOptions import OptionsFromItems#CommandLine
         options = OptionsFromItems(argList)
-        
+        options.arguments = reduce(lambda x, y: x+' '+y, argList)
+
         # after cleanup of all config parameters pass it to the ConfigBuilder
         configBuilder = ConfigBuilder(options, with_output = True, with_input = True)
 
@@ -47,11 +48,12 @@ def run(argList):
   
         if options.no_exec_flag:
             print("Config file "+options.python_filename+ " created")
-            sys.exit(0)
+            # sys.exit(0)
         else:
             commandString = options.prefix+" cmsRun "+options.suffix
             print("Starting "+commandString+' '+options.python_filename)
             commands = commandString.lstrip().split()
             os.execvpe(commands[0],commands+[options.python_filename],os.environ)
-            sys.exit()
+            # sys.exit()
+        return None
    
