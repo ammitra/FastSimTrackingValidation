@@ -1,3 +1,5 @@
+import subprocess
+subprocess.call(['source /cvmfs/cms.cern.ch/common/crab-setup.sh'],shell=True)
 from CRABAPI.RawCommand import crabCommand
 
 import cmsDriverAPI, pickle, os, time
@@ -86,9 +88,9 @@ class Maker(object):
 
     def run_gen(self):
         # Wait if there's a previous crab job
-        if self.prev.crab:
+        if self.prev != False and self.prev.crab:
             self.crabWait()
-            
+
         helper.MakeRunConfig(self.cmsDriver_args)
         if not os.path.exists(self.cmsRun_file):
             raise Exception('%s was not created.'%self.cmsRun_file)   
@@ -117,9 +119,9 @@ class MakeAOD(Maker):
         
         self.cmsDriver_args = [
             '--evt_type '+options.cfi,
-            '--conditions auto:phase1_2018_design', 
+            '--conditions auto:run2_mc', '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
+            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
             '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM',
             '--python_filename '+self.cmsRun_file, '--fileout FastSim_AOD.root'
