@@ -57,6 +57,8 @@ parser.add_option('--storageSite', metavar='F', type='string', action='store',
 if __name__ == '__main__':
     step_bools = helper.ParseSteps(options.all,options.steps)
     working_dir = helper.GetWorkingArea(options.cmssw,options.dir,step_bools)
+    if options.crab:
+        helper.executeCmd('source /cvmfs/cms.cern.ch/common/crab-setup.sh')
 
     with helper.cd(working_dir):
         helper.executeCmd("eval `scramv1 runtime -sh`")

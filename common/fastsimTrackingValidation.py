@@ -1,5 +1,3 @@
-import subprocess
-subprocess.call(['source /cvmfs/cms.cern.ch/common/crab-setup.sh'],shell=True)
 from CRABAPI.RawCommand import crabCommand
 
 import cmsDriverAPI, pickle, os, time
@@ -101,8 +99,8 @@ class Maker(object):
             self.setEOSdir()
         # Don't run crab
         else:
-            process = subprocess.Popen(['cmsRun',self.cmsRun_file])
-            process.wait()
+            helper.executeCmd('cmsRun '+self.cmsRun_file)
+            helper.executeCmd('mv FastSim_%s.root %s/'%(self.stepname,self.stepname))
 
     def setEOSdir(self):
         full_request = self.submit_out['uniquerequestname']
