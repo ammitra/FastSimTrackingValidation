@@ -18,7 +18,7 @@ class Maker(object):
             raise TypeError('The previous object needs to be made before running this step. If the current step already exists, please make sure it is loading properly.')
 
         # Basic initializing
-        if self.stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD']:
+        if self.stepname in ['AOD','BTAGVAL','MINIAOD','NANOAOD'] and options.crab:
             self.crab = True
         else:
             self.crab = False
@@ -26,16 +26,17 @@ class Maker(object):
         self.picklename = '%s%s.p'%(self.localsavedir, stepname)
         self.exists = self.checkExists() # check if pickle already exists
 
+        # Get input files
+        if self.prev != False:
+            if self.prev.crab:
+                input_file = self.prev.eosPath
+            else:
+                input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
+        else:
+            input_file = ''
+
         # Crab configuration if needed
         if self.crab:
-            # Get input files
-            if self.prev != False:
-                if self.prev.crab:
-                    input_file = self.prev.eosPath
-                else:
-                    input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
-            else:
-                input_file = ''
             # Get crab setup to track
             self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file], storageSite=options.storageSite,nevents=options.nevents,dataset=options.cfi) # make crab config
             self.crabDir = self.localsavedir+'crab_'+self.crab_config.General.requestName # record crab task dir name
@@ -44,6 +45,9 @@ class Maker(object):
             # Set after submit
             self.submit_out = None
             self.eosPath = None
+        # Still setup cmsRun file
+        else:
+            self.cmsRun_file = '%s/FastSimValidation_%s.py'%(stepname,stepname)
 
     # Save out obj to pickle
     def save(self):
@@ -75,19 +79,28 @@ class Maker(object):
         return done
 
     # Wait for crab job that self relies on to finish
-    def wait(self):
+    def crabWait(self):
         if self.prev != False:
             while not self.prev.checkDone():
                 time.sleep(60)
 
     def run_gen(self):
-        self.wait()
+        # Wait if there's a previous crab job
+        if self.prev.crab:
+            self.crabWait()
+            
         helper.MakeRunConfig(self.cmsDriver_args)
         if not os.path.exists(self.cmsRun_file):
-            raise Exception('%s was not created.'%self.cmsRun_file)        
-        print (self.crab_config)
-        self.submit_out = crabCommand('submit',config=self.crab_config)
-        self.setEOSdir()
+            raise Exception('%s was not created.'%self.cmsRun_file)   
+        # Run crab  
+        if self.crab:   
+            print (self.crab_config)
+            self.submit_out = crabCommand('submit',config=self.crab_config)
+            self.setEOSdir()
+        # Don't run crab
+        else:
+            process = subprocess.Popen(['cmsRun',self.cmsRun_file])
+            process.wait()
 
     def setEOSdir(self):
         full_request = self.submit_out['uniquerequestname']

@@ -1,7 +1,7 @@
 import subprocess
 from optparse import OptionParser
 
-import fastsimTrackingHelpers as helper
+import common.fastsimTrackingHelpers as helper
 
 parser = OptionParser()
 # Require input
@@ -23,6 +23,10 @@ parser.add_option("--SCRAM", action="store_true",
                 default =   False,
                 dest    =   "scram",
                 help    =   "Scram the area before processing")
+parser.add_option("--CRAB", action="store_true", 
+                default =   False,
+                dest    =   "crab",
+                help    =   "Run steps with crab when applicable")
 parser.add_option('-t','--tag', metavar='F', type='string', action='store',
                 default =   '',
                 dest    =   'tag',
@@ -56,10 +60,10 @@ if __name__ == '__main__':
     working_dir = helper.GetWorkingArea(options.cmssw,options.dir)
 
     with helper.cd(working_dir):
-        helper.executeCmd("eval `scramv1 runtime -csh`")
+        helper.executeCmd("eval `scramv1 runtime -sh`")
         if options.scram:
             helper.executeCmd('scram b -j 10')
-            helper.executeCmd("eval `scramv1 runtime -csh`")
+            helper.executeCmd("eval `scramv1 runtime -sh`")
 
         makers = helper.GetMakers(step_bools,options)
 
