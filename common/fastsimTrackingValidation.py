@@ -100,7 +100,6 @@ class Maker(object):
         # Don't run crab
         else:
             helper.executeCmd('cmsRun '+self.cmsRun_file)
-            helper.executeCmd('mv FastSim_%s.root %s/'%(self.stepname,self.stepname))
 
     def setEOSdir(self):
         full_request = self.submit_out['uniquerequestname']
@@ -122,7 +121,7 @@ class MakeAOD(Maker):
             '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
             '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM',
-            '--python_filename '+self.cmsRun_file, '--fileout FastSim_AOD.root'
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD.root'%(self.localsavedir if not self.crab else '')
         ]
 
     def run(self):
@@ -139,7 +138,7 @@ class MakeBtagVal(Maker):
             '--scenario pp', '-s HARVESTING:validationHarvesting',
             '--filetype DQM', '--fast', '--mc', '--era Run2_2018_FastSim',
             '--python '+self.cmsRun_file, '-n '+options.nevents, '--filein file:dummy.root',
-            '--fileout %sharvest.root'%self.localsavedir
+            '--fileout %sharvest.root'%(self.localsavedir if not self.crab else '')
         ]
 
     def run(self):
@@ -169,7 +168,7 @@ class MakeMiniAOD(Maker):
             '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
             '--datatier MINIAODSIM', '--eventcontent MINIAODSIM',
             '-s PAT', '--python_filename '+self.cmsRun_file,
-            '--fileout %sFastSim_MINIAOD.root'%self.localsavedir, '--runUnscheduled']
+            '--fileout %sFastSim_MINIAOD.root'%(self.localsavedir if not self.crab else ''), '--runUnscheduled']
 
     def run(self):
         self.run_gen()
@@ -187,7 +186,7 @@ class MakeNanoAOD(Maker):
             '--era Run2_2018,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
             '--datatier NANOAODSIM', '--eventcontent NANOAODSIM',
             '-s NANO', '--mc', '--python_filename '+self.cmsRun_file,
-            '--fileout %sFastSim_NANOAOD.root'%self.localsavedir, '''--customise_commands="process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))"'''
+            '--fileout %sFastSim_NANOAOD.root'%(self.localsavedir if not self.crab else ''), '''--customise_commands="process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))"'''
         ]
 
     def run(self):

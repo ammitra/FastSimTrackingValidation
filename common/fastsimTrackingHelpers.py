@@ -93,7 +93,6 @@ def executeCmd(cmd,bkg=False):
     else:
         subprocess.call([cmd],shell=True,executable='/bin/bash')
 
-
 #------------CMS interfacing-----------------------------------------#
 def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC',outLFNdir='/store/user/%s/FastSimValidation/'%os.environ['USER'],nevents=None,dataset=''):
     # As of now, only first statement will run (but keeping functionality)
