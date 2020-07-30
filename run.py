@@ -73,3 +73,6 @@ if __name__ == '__main__':
             if maker == None or step_bools[m] == False: continue
             maker.run()
             maker.save()
+
+    # Reset cmsenv
+    helper.executeCmd("eval `scramv1 runtime -sh`")
