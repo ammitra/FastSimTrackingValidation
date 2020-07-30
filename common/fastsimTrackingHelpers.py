@@ -25,7 +25,7 @@ def ParseSteps(allBool,steps):
     print ('Will process %s'%[s for s in out.keys() if out[s] == True])
     return out
 
-def GetWorkingArea(cmssw,testdir):
+def GetWorkingArea(cmssw,testdir,step_bools):
     working_location = testdir+'/'+cmssw+'/src'
 
     if os.path.isdir(working_location):
@@ -34,7 +34,7 @@ def GetWorkingArea(cmssw,testdir):
             print('mkdir '+working_location)
             os.mkdir(working_location)
         for f in ['AOD','TRACKVAL','BTAGVAL','MINIAOD','NANOAOD','ANALYSIS']:
-            if not os.path.isdir(working_location+'/'+f):
+            if not os.path.isdir(working_location+'/'+f) and step_bools[f]:
                 print ('mkdir '+working_location+'/'+f)
                 os.mkdir(working_location+'/'+f)
     else:
