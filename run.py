@@ -1,7 +1,6 @@
 import subprocess
 from optparse import OptionParser
-
-import common.fastsimTrackingHelpers as helper
+from common import fastsimTrackingHelpers as helper
 
 parser = OptionParser()
 # Require input
