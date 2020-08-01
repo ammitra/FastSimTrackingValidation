@@ -1,6 +1,7 @@
-import subprocess
+import time
 from optparse import OptionParser
 from common import fastsimTrackingHelpers as helper
+from collections import OrderedDict
 
 parser = OptionParser()
 # Require input
@@ -55,10 +56,12 @@ parser.add_option('--storageSite', metavar='F', type='string', action='store',
 
 #------------------------------------------------------------#
 if __name__ == '__main__':
+    start = time.time()
+    helper.executeCmd('source /cvmfs/cms.cern.ch/common/crab-setup.sh')
     step_bools = helper.ParseSteps(options.all,options.steps)
-    working_dir = helper.GetWorkingArea(options.cmssw,options.dir,step_bools)
-    if options.crab:
-        helper.executeCmd('source /cvmfs/cms.cern.ch/common/crab-setup.sh')
+    working_dir = helper.GetWorkingArea(options.cmssw,options.dir,step_bools)  
+
+    timers = OrderedDict()
 
     with helper.cd(working_dir):
         helper.executeCmd("eval `scramv1 runtime -sh`")
@@ -73,6 +76,14 @@ if __name__ == '__main__':
             if maker == None or step_bools[m] == False: continue
             maker.run()
             maker.save()
+            timers[maker.stepname] = time.time()
 
     # Reset cmsenv
     helper.executeCmd("eval `scramv1 runtime -sh`")
+    end = time.time()
+    prevtime = start
+    for step in timers.keys():
+        t = time.strftime("%H:%M:%S", time.gmtime(timers[step]-prevtime))
+        print '%s time: %s'%(step,t)
+        prevtime = timers[step]
+    print 'Total time: %s'%time.strftime("%H:%M:%S", time.gmtime(end-start))
