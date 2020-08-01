@@ -132,18 +132,21 @@ class MakeAOD(Maker):
 class MakeBtagVal(Maker):
     """docstring for MakeBtagVal"""
     def __init__(self, MiniAODobj,options):
-        super(MakeBtagVal, self).__init__('BTAGVAL',MiniAODobj)
+        super(MakeBtagVal, self).__init__('BTAGVAL',MiniAODobj,options)
 
         self.cmsDriver_args = [
-            '--conditions auto:phase1_2018_realistic',
-            '--scenario pp', '-s HARVESTING:validationHarvesting',
-            '--filetype DQM', '--fast', '--mc', '--era Run2_2018_FastSim',
-            '--python '+self.cmsRun_file, '-n '+options.nevents, '--filein file:dummy.root',
-            '--fileout %sharvest.root'%(self.localsavedir if not self.crab else '')
+            '--filein file:%s'%(self.input_file), '--mc', 
+            '--conditions auto:run2_mc', '--scenario pp',
+            '--fast', '-n '+options.nevents, '--nThreads 1',
+            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
+            '--filetype DQM',
+            '-s HARVESTING:validationHarvesting',
+            '--python_filename '+self.cmsRun_file # no --fileout, see `mv` command below
         ]
 
     def run(self):
         self.run_gen()
+        helper.executeCmd('mv DQM_V0001_R000000001__Global__CMSSW_X_Y_Z__RECO.root %sharvest.root'%(self.localsavedir if not self.crab else ''))
 
 #### Track validation 
 class MakeTrackVal(Maker):
@@ -152,9 +155,9 @@ class MakeTrackVal(Maker):
         super(MakeTrackVal, self).__init__('TRACKVAL',AODobj,options)
         
     def run(self):
-        self.wait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks.root'%(self.prev.eosPath,self.localsavedir)
-        subprocess.Popen(harvest_cmd.split(' '))
+        if self.prev.crab: self.crabWait()
+        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks.root'%(self.input_file,self.localsavedir)
+        helper.executeCmd(harvest_cmd)
 
 ## MiniAOD production
 class MakeMiniAOD(Maker):
@@ -163,13 +166,13 @@ class MakeMiniAOD(Maker):
         super(MakeMiniAOD, self).__init__('MINIAOD',AODobj,options)
 
         self.cmsDriver_args = [
-            '--filein file:dummy.root',
-            '--conditions auto:phase1_2018_design',
+            '--filein file:%s'%(self.input_file), '--mc',
+            '--conditions auto:run2_mc', '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2018_FastSim', '--beamspot Realistic50ns13TeVCollision',
+            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
             '--datatier MINIAODSIM', '--eventcontent MINIAODSIM',
-            '-s PAT', '--python_filename '+self.cmsRun_file,
-            '--fileout %sFastSim_MINIAOD.root'%(self.localsavedir if not self.crab else ''), '--runUnscheduled']
+            '-s PAT', 
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_MINIAOD.root'%(self.localsavedir if not self.crab else ''), '--runUnscheduled']
 
     def run(self):
         self.run_gen()
@@ -181,13 +184,14 @@ class MakeNanoAOD(Maker):
         super(MakeNanoAOD, self).__init__('NANOAOD',MiniAODobj,options)
 
         self.cmsDriver_args = [
-            '--filein file:dummy.root',
-            '--conditions auto:phase1_2018_design',
+            '--filein file:%s'%(self.input_file), '--mc',
+            '--conditions auto:run2_mc', '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2018,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
+            '--era Run2_2016,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
             '--datatier NANOAODSIM', '--eventcontent NANOAODSIM',
-            '-s NANO', '--mc', '--python_filename '+self.cmsRun_file,
-            '--fileout %sFastSim_NANOAOD.root'%(self.localsavedir if not self.crab else ''), '''--customise_commands="process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)))"'''
+            '-s NANO', 
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_NANOAOD.root'%(self.localsavedir if not self.crab else ''), 
+            '''--customise_commands="process.add_(cms.Service('InitRootHandlers',EnableIMT=cms.untracked.bool(False)))"'''
         ]
 
     def run(self):
