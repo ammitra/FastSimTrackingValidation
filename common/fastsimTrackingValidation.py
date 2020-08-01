@@ -26,19 +26,20 @@ class Maker(object):
         self.picklename = '%s%s.p'%(self.localsavedir, stepname)
         self.exists = self.checkExists() # check if pickle already exists
 
-        # Get input files
+        # Get input files (output of previous step)
         if self.prev != False:
+            # If crab, hadd together locally from EOS
             if self.prev.crab:
-                input_file = self.prev.eosPath
+                helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
+
+            self.input_file = '%sFastSim_%s.root'%(self.prev.localsavedir, self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
             else:
-                input_file = '%sFastSim_%s.root'%(self.prev.localsavedir,self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
-        else:
-            input_file = ''
+            self.input_file = ''
 
         # Crab configuration if needed
         if self.crab:
             # Get crab setup to track
-            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[input_file], storageSite=options.storageSite,nevents=options.nevents,dataset=options.cfi) # make crab config
+            self.crab_config = helper.MakeCrabConfig(stepname, options.tag, files=[self.input_file], storageSite=options.storageSite,nevents=options.nevents,dataset=options.cfi) # make crab config
             self.crabDir = self.localsavedir+'crab_'+self.crab_config.General.requestName # record crab task dir name
             self.cmsRun_file = self.crab_config.JobType.psetName
 
@@ -105,7 +106,7 @@ class Maker(object):
         full_request = self.submit_out['uniquerequestname']
         first_underscore = full_request.find('_')+1
         request_time_data = full_request[:full_request.find('_',first_underscore)]
-        self.eosPath = 'root://cmsxrootd.fnal.gov//%s/%s/%s/%s/*/%s.root'%(self.crab_config.Data.outLFNDirBase, self.crab_config.General.requestName, self.crab_config.Data.outputDatasetTag, request_time_data, self.crab_config.JobType.psetName)
+        self.eosPath = 'root://cmsxrootd.fnal.gov//%s/%s/%s/%s/0000/'%(self.crab_config.Data.outLFNDirBase, self.crab_config.General.requestName, self.crab_config.Data.outputDatasetTag, request_time_data)#, self.crab_config.JobType.psetName)
         return self.eosPath
 
 # Fastsim AOD production
@@ -115,7 +116,7 @@ class MakeAOD(Maker):
         super(MakeAOD, self).__init__('AOD',False,options)
         
         self.cmsDriver_args = [
-            '--evt_type '+options.cfi,
+            '--evt_type '+options.cfi, '--mc',
             '--conditions auto:run2_mc', '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
