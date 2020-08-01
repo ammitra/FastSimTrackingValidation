@@ -81,6 +81,8 @@ def SaveToJson(path,outdict):
 def cd(newdir):
     print ('cd '+newdir)
     prevdir = os.getcwd()
+    if not os.path.isdir(newdir):
+        os.mkdir(newdir)
     os.chdir(os.path.expanduser(newdir))
     try:
         yield
@@ -88,6 +90,7 @@ def cd(newdir):
         os.chdir(prevdir)
 
 def executeCmd(cmd,bkg=False):
+    print cmd
     if bkg:
         subprocess.Popen(cmd.split(' '))
     else:
