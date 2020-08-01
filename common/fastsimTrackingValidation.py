@@ -2,6 +2,7 @@ from CRABAPI.RawCommand import crabCommand
 
 import cmsDriverAPI, pickle, os, time
 import fastsimTrackingHelpers as helper
+import nanoValidation
 
 from collections import OrderedDict
 
@@ -33,7 +34,7 @@ class Maker(object):
                 helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
 
             self.input_file = '%sFastSim_%s.root'%(self.prev.localsavedir, self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
-            else:
+        else:
             self.input_file = ''
 
         # Crab configuration if needed
@@ -204,8 +205,9 @@ class MakeAnalysis(Maker):
         super(MakeAnalysis, self).__init__('ANALYSIS',NanoAODobj,options)
 
     def run(self):
-        self.wait()
-        pass
+        if self.prev.crab: self.crabWait()
+        
+        nanoValidation.NanoValidation(self.input_file,self.localsavedir+'/FastSim_ANALYSIS.root')
 
 
 
