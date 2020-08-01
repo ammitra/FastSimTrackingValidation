@@ -93,6 +93,36 @@ def executeCmd(cmd,bkg=False):
     else:
         subprocess.call([cmd],shell=True,executable='/bin/bash')
 
+def eosls(path,withxrd=True,cs=False): #cs = comma-separated
+    xrd = 'root://cmsxrootd.fnal.gov'
+    cmd = 'xrdfs %s ls %s'%(xrd,path)
+    file_list = subprocess.check_output(cmd.split(' ')).split('\n')
+    while '' in file_list:
+        file_list.remove('')
+    # Prepend xrd
+    if withxrd:
+        out = []
+        for f in file_list:
+            out.append(xrd+'/'+f)
+    # or not
+    else:
+        out = file_list
+    # Make a comma separated string instead of list
+    if cs:
+        out = ','.join(out)
+    return out
+
+def haddFromEOS(stepname, eospath):
+    # eosfiles = eosls(eospath,withxrd=True,cs=True)
+    xrd = 'root://cmsxrootd.fnal.gov'
+    # Will skip inDQM
+    grep = "grep 'FastSim_%s_[0-9]*\.root"%(stepname)
+    executeCmd("hadd -f %s/FastSim_%s.root `xrdfs %s ls -u %s | %s`"%(stepname,stepname,xrd,eospath,grep))
+    # Now do inDQM
+    if stepname == 'AOD':
+        grep = "grep 'FastSim_%s_[0-9]*\.root"%(stepname+'_inDQM')
+        executeCmd("hadd -f %s/FastSim_%s.root `xrdfs %s ls -u %s | %s`"%(stepname,stepname+'_inDQM',xrd,eospath,grep))
+
 #------------CMS interfacing-----------------------------------------#
 def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC',outLFNdir='/store/user/%s/FastSimValidation/'%os.environ['USER'],nevents=None,dataset=''):
     # As of now, only first statement will run (but keeping functionality)
