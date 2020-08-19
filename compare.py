@@ -1,6 +1,8 @@
 import subprocess, os, ROOT
 from common import fastsimTrackingHelpers as helper
 from optparse import OptionParser
+ROOT.gROOT.SetBatch(True)
+ROOT.gStyle.SetOptStat(0)
 
 parser = OptionParser()
 # Require input
@@ -39,7 +41,7 @@ def TrackValPlotting(valdirs):
     trackval_cmd = 'makeTrackValidationPlots.py -o tracking_plots'
     for d in valdirs:
         if '.root' in d:
-            trackval_cmd+=' ../%s'%(d)
+            trackval_cmd+=' %s'%(d)
         else:
             trackval_cmd+=' ../%s/FastSimValWorkspace/TRACKVAL/harvestTracks.root'%(d)
     helper.executeCmd(trackval_cmd,bkg=False)
@@ -50,7 +52,7 @@ def AnalysisPlotting(valdirs,names):
 
     canvases = {}
     legends = {}
-    colors = [ROOT.kRed,ROOT.Blue,ROOT.kGreen,ROOT.kOrange]
+    colors = [ROOT.kRed,ROOT.kBlue,ROOT.kGreen,ROOT.kOrange]
     for i,d in enumerate(valdirs):
         if '.root' in d:
             f = ROOT.TFile.Open(d)
@@ -60,14 +62,18 @@ def AnalysisPlotting(valdirs,names):
             hname = key.GetName()
             if hname not in canvases.keys():
                 canvases[hname] = ROOT.TCanvas(hname,hname,800,700)
-                legends[hname] = ROOT.TLegend(0.75,0.75,0.95,0.95)
+                legends[hname] = ROOT.TLegend(0.65,0.75,0.95,0.9)
             
             h = f.Get(key.GetName())
             canvases[hname].cd()
             h.SetDirectory(0)
             h.SetLineColor(colors[i])
+            h.Scale(1-i*0.1)
+            # if i == 0:
+            #     h.SetFillColor(ROOT.kYellow)
             legends[hname].AddEntry(h,names[i],'l')
             h.Draw('same hist e')
+            legends[hname].Draw()
     
     for ckey in canvases.keys():
         canvases[ckey].Print('AnalysisVars/%s.pdf'%ckey,'pdf')
@@ -103,4 +109,4 @@ if __name__ == '__main__':
         if 'ALL' in options.steps or 'ANALYSIS' in options.steps:
             if not os.path.exists('AnalysisVars/'):
                 os.mkdir('AnalysisVars')
-            AnalysisPlotting(valdirs,name)
+            AnalysisPlotting(valdirs,names)
