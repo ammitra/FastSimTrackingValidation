@@ -1,5 +1,5 @@
 try:
-import CRABClient
+    import CRABClient
 except ImportError as e:
     print('Cannot import CRABClient. Please try sourcing crab-setup (in bash: `source /cvmfs/cms.cern.ch/common/crab-setup.sh`)')
     raise e
@@ -167,13 +167,13 @@ def eosls(path,withxrd=True,cs=False): #cs = comma-separated
 
 def haddFromEOS(stepname, eospath):
     # eosfiles = eosls(eospath,withxrd=True,cs=True)
-    xrd = 'root://cmsxrootd.fnal.gov'
+    xrd = 'root://cmsxrootd-site1.fnal.gov'
     # Will skip inDQM
-    grep = "grep 'FastSim_%s_[0-9]*\.root"%(stepname)
+    grep = "grep 'FastSim_%s_[0-9]*\.root'"%(stepname)
     executeCmd("hadd -f %s/FastSim_%s.root `xrdfs %s ls -u %s | %s`"%(stepname,stepname,xrd,eospath,grep))
     # Now do inDQM
     if stepname == 'AOD':
-        grep = "grep 'FastSim_%s_[0-9]*\.root"%(stepname+'_inDQM')
+        grep = "grep 'FastSim_%s_[0-9]*\.root'"%(stepname+'_inDQM')
         executeCmd("hadd -f %s/FastSim_%s.root `xrdfs %s ls -u %s | %s`"%(stepname,stepname+'_inDQM',xrd,eospath,grep))
 
 #------------CMS interfacing-----------------------------------------#
@@ -192,13 +192,14 @@ def MakeCrabConfig(stepname, tag, files=[],storageSite='T3_US_FNALLPC',outLFNdir
         raise ValueError("You are trying to analyze but the inputFiles list is empty.")
 
     crab_config = config()
-    crab_config.General.requestName = 'FastSimValidation_%s'%stepname
+    crab_config.General.requestName = 'FastSimValidation_%s_%s'%(stepname,tag)
     crab_config.General.workArea = stepname
     crab_config.General.transferOutputs = True
     crab_config.JobType.psetName = '%s/FastSimValidation_%s.py'%(stepname,stepname)
     crab_config.Data.publication = False
     if stepname == 'AOD':
         crab_config.Data.totalUnits = int(nevents)
+        crab_config.JobType.maxMemoryMB = 4000
         # crab_config.Data.inputDataset = dataset
     crab_config.Site.storageSite = storageSite
     crab_config.Data.outLFNDirBase = outLFNdir

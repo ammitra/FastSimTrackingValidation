@@ -29,11 +29,13 @@ class Maker(object):
 
         # Get input files (output of previous step)
         if self.prev != False:
+            self.input_file = '%sFastSim_%s.root'%(self.prev.localsavedir, self.prev.stepname if self.stepname not in ['BTAGVAL','TRACKVAL'] else 'AOD_inDQM')
             # If crab, hadd together locally from EOS
             if self.prev.crab:
-                helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
-
-            self.input_file = '%sFastSim_%s.root'%(self.prev.localsavedir, self.prev.stepname if self.stepname != 'BTAGVAL' else 'AOD_inDQM')
+                self.crabWait()
+                if not os.path.exists(self.input_file):
+                    if os.path.getmtime(self.input_file) < os.path.getmtime(self.localsavedir+'crab_submit.json'):
+                        helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
         else:
             self.input_file = ''
 
@@ -72,7 +74,7 @@ class Maker(object):
     def checkDone(self):
         # Send status output to a file so we dont have to print it several times
         with helper.redirection(os.devnull):
-        status = crabCommand('status',dir = self.crabDir)
+            status = crabCommand('status',dir = self.crabDir)
 
         if status['status'] == 'COMPLETED':
             print ('Job %s COMPLETED'%self.crabDir)
@@ -97,10 +99,6 @@ class Maker(object):
                 doneBool,crabInfo = self.prev.checkDone()
 
     def run_gen(self):
-        # Wait if there's a previous crab job
-        if self.prev != False and self.prev.crab:
-            self.crabWait()
-
         helper.MakeRunConfig(self.cmsDriver_args)
         if not os.path.exists(self.cmsRun_file):
             raise Exception('%s was not created.'%self.cmsRun_file)   
@@ -115,9 +113,11 @@ class Maker(object):
 
     def setEOSdir(self):
         full_request = self.submit_out['uniquerequestname']
-        first_underscore = full_request.find('_')+1
-        request_time_data = full_request[:full_request.find('_',first_underscore)]
-        self.eosPath = 'root://cmsxrootd.fnal.gov//%s/%s/%s/%s/0000/'%(self.crab_config.Data.outLFNDirBase, self.crab_config.General.requestName, self.crab_config.Data.outputDatasetTag, request_time_data)#, self.crab_config.JobType.psetName)
+        # first_underscore = full_request.find('_')+1
+        # request_time_data = full_request[:full_request.find('_',first_underscore)]
+        request_time_data = full_request.split(':')[0]
+        # /store/user/lcorcodi/FastSimValidation/TTbar_13TeV_TuneCUETP8M1/test/200819_192031/0000
+        self.eosPath = '%s/%s/%s/%s/0000/'%(self.crab_config.Data.outLFNDirBase, self.crab_config.Data.outputPrimaryDataset, self.crab_config.Data.outputDatasetTag, request_time_data)#, self.crab_config.JobType.psetName)
         return self.eosPath
 
 # Fastsim AOD production
