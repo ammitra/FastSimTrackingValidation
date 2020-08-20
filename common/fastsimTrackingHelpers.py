@@ -17,21 +17,26 @@ from collections import OrderedDict
 from fastsimTrackingValidation import *
 
 #--------------------Helpers-----------------------------------------#
-def ParseSteps(allBool,steps):
+def ParseSteps(steps):
     step_list = steps.split(',')
+    if 'ALL' in step_list: 
+        allBool = True
+    else:
+        allBool = False
+
     all_steps = ['AOD','TRACKVAL','BTAGVAL','MINIAOD','NANOAOD','ANALYSIS']
     out = OrderedDict()
 
     if allBool:
         for s in all_steps:
             out[s] = True
-
     else:
         for step in all_steps:
             if step in step_list:
                 out[step] = True
             else:
                 out[step] = False
+
     print ('Will process %s'%[s for s in out.keys() if out[s] == True])
     return out
 

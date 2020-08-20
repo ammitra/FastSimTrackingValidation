@@ -13,12 +13,8 @@ parser.add_option('-d', metavar='F', type='string', action='store',
 parser.add_option("--steps", type='string', action="store", 
                 default =   '',
                 dest    =   "steps",
-                help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,ANALYSIS.")
+                help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,ANALYSIS,ALL.")
 # Provided defaults
-parser.add_option("--ALL", action="store_true", 
-                default =   False,
-                dest    =   "all",
-                help    =   "Run full workflow")
 parser.add_option("--SCRAM", action="store_true", 
                 default =   False,
                 dest    =   "scram",
