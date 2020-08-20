@@ -1,6 +1,6 @@
 from CRABAPI.RawCommand import crabCommand
 
-import cmsDriverAPI, pickle, os, time
+import cmsDriverAPI, pickle, os, time, sys
 import fastsimTrackingHelpers as helper
 import nanoValidation
 
@@ -70,7 +70,10 @@ class Maker(object):
 
     # Check if self crab job finished
     def checkDone(self):
+        # Send status output to a file so we dont have to print it several times
+        with helper.redirection(os.devnull):
         status = crabCommand('status',dir = self.crabDir)
+
         if status['status'] == 'COMPLETED':
             print ('Job %s COMPLETED'%self.crabDir)
             done = True
@@ -78,13 +81,20 @@ class Maker(object):
             raise Exception('Job %s has FAILED. Please attempt to fix the issue manually before attempting to rerun.'%self.crabDir)
         else:
             done = False
-        return done
+
+        return done,status
 
     # Wait for crab job that self relies on to finish
     def crabWait(self):
         if self.prev != False:
-            while not self.prev.checkDone():
+            doneBool,crabInfo = self.prev.checkDone()
+            while not doneBool:
+                stati = crabInfo['jobsPerStatus']
+                print_out = '\t'.join(['%s: %s' %(k, stati[k]) for k in stati.keys()])
+                sys.stdout.write(print_out+'\r')
                 time.sleep(60)
+                sys.stdout.flush()
+                doneBool,crabInfo = self.prev.checkDone()
 
     def run_gen(self):
         # Wait if there's a previous crab job

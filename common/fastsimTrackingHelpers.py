@@ -118,6 +118,16 @@ def SaveToJson(path,outdict):
     out.close()
 
 @contextmanager
+def redirection(filename):
+    fileobj = open(filename,'w')
+    old = sys.stdout
+    sys.stdout = fileobj
+    try:
+        yield fileobj
+    finally:
+        sys.stdout = old
+
+@contextmanager
 def cd(newdir):
     print ('cd '+newdir)
     prevdir = os.getcwd()
@@ -214,14 +224,4 @@ def MakeRunConfig(inputArgs):
     for a in inputArgs:
         final_string += a+' '
     final_string += '--no_exec'
-    print final_string.split()
     cmsDriverAPI.run(final_string.split())
-    # remove_spaces = []
-    # for a in inputArgs:
-    #     s = a.split(' ')
-    #     for p in s:
-    #         if p != '': remove_spaces.append(p)
-    # driver_args = remove_spaces
-    # driver_args.append('--no_exec')
-    # print (driver_args)
-    # cmsDriverAPI.run(driver_args)
