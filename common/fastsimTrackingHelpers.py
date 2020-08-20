@@ -1,17 +1,12 @@
-import subprocess
-def executeCmd(cmd,bkg=False):
-    print cmd
-    if bkg:
-        subprocess.Popen(cmd.split(' '))
-    else:
-        subprocess.call([cmd],shell=True,executable='/bin/bash')
-
-executeCmd('source /cvmfs/cms.cern.ch/common/crab-setup.sh')
-
+try:
 import CRABClient
+except ImportError as e:
+    print('Cannot import CRABClient. Please try sourcing crab-setup (in bash: `source /cvmfs/cms.cern.ch/common/crab-setup.sh`)')
+    raise e
 from CRABClient.UserUtilities import config
 import cmsDriverAPI, pickle, os, json
 
+import json, subprocess
 from contextlib import contextmanager
 from collections import OrderedDict
 from fastsimTrackingValidation import *
