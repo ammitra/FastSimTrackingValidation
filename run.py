@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import time
 from optparse import OptionParser
 from common import fastsimTrackingHelpers as helper
@@ -5,7 +6,6 @@ from collections import OrderedDict
 
 parser = OptionParser()
 # Require input
-
 parser.add_option('-d', metavar='F', type='string', action='store',
                 default =   '',
                 dest    =   'dir',
@@ -26,7 +26,7 @@ parser.add_option("--CRAB", action="store_true",
 parser.add_option('-t','--tag', metavar='F', type='string', action='store',
                 default =   '',
                 dest    =   'tag',
-                help    =   'Name for identifying the run')
+                help    =   'Name for identifying CRAB run')
 parser.add_option('--cfi', metavar='F', type='string', action='store',
                 default =   'TTbar_13TeV_TuneCUETP8M1_cfi',
                 dest    =   'cfi',
@@ -43,21 +43,25 @@ parser.add_option('--storageSite', metavar='F', type='string', action='store',
                 default =   'T3_US_FNALLPC',
                 dest    =   'storageSite',
                 help    =   'CRAB storage site')
+# Config to use as base options
+parser.add_option('-c', '--config', metavar='F', type='string', action='store',
+                default =   '',
+                dest    =   'config',
+                help    =   'JSON config with options set')
 # parser.add_option('--eosPath', metavar='F', type='string', action='store',
 #                 default =   '',
 #                 dest    =   'eosPath',
 #                 help    =   'EOS path')
 
-(options, args) = parser.parse_args()
+options = helper.handleOptions(parser)
 
 #------------------------------------------------------------#
 if __name__ == '__main__':
     start = time.time()
-    step_bools = helper.ParseSteps(options.all,options.steps)
+    step_bools = helper.ParseSteps(options.steps)
     working_dir = helper.GetWorkingArea(options.cmssw,options.dir,step_bools)  
 
     timers = OrderedDict()
-
     with helper.cd(working_dir):
         helper.executeCmd("eval `scramv1 runtime -sh`")
         if options.scram:
@@ -79,6 +83,6 @@ if __name__ == '__main__':
     prevtime = start
     for step in timers.keys():
         t = time.strftime("%H:%M:%S", time.gmtime(timers[step]-prevtime))
-        print '%s time: %s'%(step,t)
+        print ('%s time: %s'%(step,t))
         prevtime = timers[step]
-    print 'Total time: %s'%time.strftime("%H:%M:%S", time.gmtime(end-start))
+    print ('Total time: %s'%time.strftime("%H:%M:%S", time.gmtime(end-start)))

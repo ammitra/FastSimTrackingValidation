@@ -16,6 +16,36 @@ from contextlib import contextmanager
 from collections import OrderedDict
 from fastsimTrackingValidation import *
 
+#------------------JSON config reading-------------------------------#
+# Function stolen from https://stackoverflow.com/questions/9590382/forcing-python-json-module-to-work-with-ascii
+def openJSON(f):
+    with open(f) as fInput_config:
+        input_config = json.load(fInput_config, object_hook=ascii_encode_dict)  # Converts most of the unicode to ascii
+    return input_config
+
+def ascii_encode_dict(data):    
+    ascii_encode = lambda x: x.encode('ascii') if isinstance(x, unicode) else x 
+    return dict(map(ascii_encode, pair) for pair in data.items())
+
+def handleOptions(optparser):
+    (options,args) = optparser.parse_args()# establish main option object
+
+    if options.config != '': # if there's a config...
+        config = openJSON(options.config)
+        for k in config.keys():
+            # ... set config option if it exists and only overwriting CL default
+            if k in optparser.defaults.keys() and (getattr(options,k) == optparser.defaults[k]):
+                setattr(options,k,config[k])
+
+    printOptions(options)
+    return options
+
+def printOptions(options):
+    print('Will use options: ')
+    d_options = vars(options)
+    for k in d_options.keys():
+        print ('\t%s = %s'%(k,d_options[k]))
+
 #--------------------Helpers-----------------------------------------#
 def ParseSteps(steps):
     step_list = steps.split(',')
