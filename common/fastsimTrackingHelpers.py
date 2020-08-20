@@ -129,6 +129,12 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
+def executeCmd(cmd,bkg=False):
+    print (cmd)
+    if bkg:
+        subprocess.Popen(cmd.split(' '))
+    else:
+        subprocess.call([cmd],shell=True,executable='/bin/bash')
 
 def eosls(path,withxrd=True,cs=False): #cs = comma-separated
     xrd = 'root://cmsxrootd.fnal.gov'
