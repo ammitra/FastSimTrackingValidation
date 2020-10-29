@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time
+import time, os
 from optparse import OptionParser
 from common import fastsimTrackingHelpers as helper
 from collections import OrderedDict
@@ -67,10 +67,11 @@ if __name__ == '__main__':
 
     timers = OrderedDict()
     with helper.cd(working_dir):
-        helper.executeCmd("eval `scramv1 runtime -sh`")
+        os.environ = helper.cmsenv()
+
         if options.scram:
-            helper.executeCmd('scram b -j 10')
-            helper.executeCmd("eval `scramv1 runtime -sh`")
+            helper.executeCmd('scram b clean; scram b -j 10')
+            os.environ = helper.cmsenv()
 
         makers = helper.GetMakers(step_bools,options)
 
@@ -81,8 +82,7 @@ if __name__ == '__main__':
             maker.save()
             timers[maker.stepname] = time.time()
 
-    # Reset cmsenv
-    helper.executeCmd("eval `scramv1 runtime -sh`")
+    # Print time
     end = time.time()
     prevtime = start
     for step in timers.keys():

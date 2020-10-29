@@ -139,12 +139,35 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
-def executeCmd(cmd,bkg=False):
+def executeCmd(cmd,bkg=False,inenv=None):
+    if inenv == None: inenv = os.environ
     print (cmd)
     if bkg:
-        subprocess.Popen(cmd.split(' '))
+        subprocess.Popen(cmd.split(' '),env=inenv)
     else:
-        subprocess.call([cmd],shell=True,executable='/bin/bash')
+        subprocess.call([cmd],shell=True,executable='/bin/bash',env=inenv)
+
+def cmsenv(env=None):
+    env = os.environ.copy()
+    runtime_cmds = subprocess.Popen('scram runtime -sh',shell=True, stdout=subprocess.PIPE, universal_newlines=True).communicate()[0]
+    for cmd in runtime_cmds.split(';\n'):
+        if cmd == '': continue
+        cmd = cmd.strip()
+        action = cmd.split()[0]
+        option = cmd.split()[1:]
+
+        if action == 'unset':
+            for var in option:
+                try:
+                    del env[var.replace(';','')]
+                except:
+                    print ('Could not unset %s'%var.replace(';',''))
+        elif action == 'export':
+            var = option[0].split('=')[0]
+            path = option[0].split('=')[1][1:].replace('";','').replace('"','')
+            env[var] = path
+            
+    return env
 
 def eosls(path,withxrd=True,cs=False): #cs = comma-separated
     xrd = 'root://cmsxrootd.fnal.gov'

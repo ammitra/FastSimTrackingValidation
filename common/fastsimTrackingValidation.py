@@ -39,8 +39,8 @@ class Maker(object):
             if self.prev.crab:
                 self.crabWait()
                 if not os.path.exists(self.input_file):
-                    if os.path.getmtime(self.input_file) < os.path.getmtime(self.localsavedir+'crab_submit.json'):
-                        helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
+                    # if os.path.getmtime(self.input_file) < os.path.getmtime(self.localsavedir+'crab_submit.json'):
+                    helper.haddFromEOS(self.prev.stepname,self.prev.eosPath)
         else:
             self.input_file = ''
 
