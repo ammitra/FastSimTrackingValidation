@@ -31,14 +31,14 @@ parser.add_option('-t','--tag', metavar='F', type='string', action='store',
                 default =   '',
                 dest    =   'tag',
                 help    =   'Name for identifying CRAB run')
-parser.add_option('--cfi', metavar='F', type='string', action='store',
-                default =   'TTbar_13TeV_TuneCUETP8M1_cfi',
-                dest    =   'cfi',
-                help    =   'Set cfi')
 parser.add_option('--nevents', metavar='F', type='string', action='store',
                 default =   '1000',
                 dest    =   'nevents',
                 help    =   'Number of events to run')
+parser.add_option('--cmsDriver', metavar='F', type='string', action='store',
+                default =   '',
+                dest    =   'cmsDriver',
+                help    =   'Additional cmsDriver.py arguments that are not included in the definitions in fastsimTrackingValidation.py')
 parser.add_option('--cmssw', metavar='F', type='string', action='store',
                 default =   'CMSSW_10_6_12',
                 dest    =   'cmssw',

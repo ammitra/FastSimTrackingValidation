@@ -25,12 +25,37 @@ def ascii_encode_dict(data):
 def handleOptions(optparser):
     (options,args) = optparser.parse_args()# establish main option object
 
-    if options.config != '': # if there's a config...
+    cmsDriverOptions = {
+        'cfi': 'TTbar_13TeV_TuneCUETP8M1_cfi', 
+        'conditions': 'auto:phase1_2018_realistic',
+        'era': 'Run2_2018_FastSim',
+        'beamspot': 'Realistic25ns13TeVEarly2018Collision'
+        # 'datamix': 'PreMix',
+        # 'procModifiers': 'premix_stage2',
+        # 'pileup_input': 'das:/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_4-PU25ns_106X_upgrade2018_realistic_v9_FastSim-v1/PREMIX',
+    }
+
+    if options.config != '': 
         config = openJSON(options.config)
+        
         for k in config.keys():
-            # ... set config option if it exists and only overwriting CL default
+            # Set config option if it exists and only overwriting CL default
             if k in optparser.defaults.keys() and (getattr(options,k) == optparser.defaults[k]):
                 setattr(options,k,config[k])
+            # Set option if it doesn't exit
+            elif k not in optparser.defaults.keys():
+                setattr(options,k,config[k])
+        # Set any of the CMS driver options that must be specified by config file (no CL options)
+        for k in cmsDriverOptions.keys():
+            if k in config.keys():
+                setattr(options,k,config[k])
+            else:
+                setattr(options,k,cmsDriverOptions[k])
+    
+    else:
+        # Set CMS driver options even if config not specified
+        for k in cmsDriverOptions.keys():
+            setattr(options,k,cmsDriverOptions[k])
 
     printOptions(options)
     return options

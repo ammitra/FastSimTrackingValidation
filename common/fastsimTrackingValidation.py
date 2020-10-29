@@ -125,6 +125,11 @@ class Maker(object):
         self.eosPath = '%s/%s/%s/%s/0000/'%(self.crab_config.Data.outLFNDirBase, self.crab_config.Data.outputPrimaryDataset, self.crab_config.Data.outputDatasetTag, request_time_data)#, self.crab_config.JobType.psetName)
         return self.eosPath
 
+    def _addExtraOptions(self,options):
+        if options.cmsDriver != '':
+            for o in options.cmsDriver.split(' -'):
+                self.cmsDriver_args.append(' -'+o)
+
 # Fastsim AOD production
 class MakeAOD(Maker):
     """docstring for MakeAOD"""
@@ -133,12 +138,14 @@ class MakeAOD(Maker):
         
         self.cmsDriver_args = [
             '--evt_type '+options.cfi, '--mc',
-            '--conditions auto:run2_mc', '--scenario pp',
+            '--conditions '+options.conditions, '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
+            '--era '+options.era, '--beamspot '+options.beamspot,
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
+            '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM', # Need to add DATAMIX before L1 is using pileup
             '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag)
         ]
+        self._addExtraOptions(options)
 
     def run(self):
         self.run_gen()
@@ -151,13 +158,14 @@ class MakeBtagVal(Maker):
 
         self.cmsDriver_args = [
             '--filein file:%s'%(self.input_file), '--mc', 
-            '--conditions auto:run2_mc', '--scenario pp',
+            '--conditions '+options.conditions, '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
+            '--era '+options.era, '--beamspot '+options.beamspot,
             '--filetype DQM',
             '-s HARVESTING:validationHarvesting',
             '--python_filename '+self.cmsRun_file # no --fileout, see `mv` command below
         ]
+        self._addExtraOptions(options)
 
     def run(self):
         self.run_gen()
@@ -182,9 +190,9 @@ class MakeMiniAOD(Maker):
 
         self.cmsDriver_args = [
             '--filein file:%s'%(self.input_file), '--mc',
-            '--conditions auto:run2_mc', '--scenario pp',
+            '--conditions '+options.conditions, '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
+            '--era '+options.era, '--beamspot '+options.beamspot,
             '--datatier MINIAODSIM', '--eventcontent MINIAODSIM',
             '-s PAT', 
             '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_MINIAOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag), '--runUnscheduled']
@@ -201,29 +209,15 @@ class MakeNanoAOD(Maker):
 
         self.cmsDriver_args = [
             '--filein file:%s'%(self.input_file), '--mc',
-            '--conditions auto:run2_mc', '--scenario pp',
+            '--conditions '+options.conditions, '--scenario pp',
             '--fast', '-n '+options.nevents, '--nThreads 1',
-            '--era Run2_2016,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
+            '--era '+options.era+',run2_nanoAOD_102Xv1', '--beamspot '+options.beamspot,
             '--datatier NANOAODSIM', '--eventcontent NANOAODSIM',
             '-s NANO', 
             '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_NANOAOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag), 
             '''--customise_commands="process.add_(cms.Service('InitRootHandlers',EnableIMT=cms.untracked.bool(False)))"'''
         ]
+        self._addExtraOptions(options)
 
     def run(self):
         self.run_gen()
-
-#### ANALYSIS
-class MakeAnalysis(Maker):
-    """docstring for MakeAnalysis"""
-    def __init__(self, NanoAODobj,options):
-        super(MakeAnalysis, self).__init__('ANALYSIS',NanoAODobj,options)
-
-    def run(self):
-        if self.prev.crab: self.crabWait()
-        
-        nanoValidation.NanoValidation(self.input_file,self.localsavedir+'/FastSim_ANALYSIS.root')
-
-
-
-    
