@@ -101,7 +101,7 @@ def GetMakers(step_bools,options):
                 makers[step_name] = MakeAnalysis(makers['NANOAOD'],options)
         else:
             # Returns None and warning message if it doesn't exist
-            makers[step_name] = LoadMaker('{0}/{0}.p'.format(step_name))
+            makers[step_name] = LoadMaker('{0}/{0}_{1}.p'.format(step_name,options.tag))
  
     return makers
 

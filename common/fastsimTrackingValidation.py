@@ -14,6 +14,7 @@ class Maker(object):
 
         # Store reference to maker this is reliant on ("False" for AOD which is the top level)
         self.stepname = stepname
+        self.tag = options.tag
         self.prev = prev
         if self.prev == None:
             raise TypeError('The previous object needs to be made before running this step. If the current step already exists, please make sure it is loading properly.')
@@ -24,12 +25,13 @@ class Maker(object):
         else:
             self.crab = False
         self.localsavedir = '%s/'%self.stepname
-        self.picklename = '%s%s.p'%(self.localsavedir, stepname)
+        self.picklename = '%s%s_%s.p'%(self.localsavedir, self.stepname,self.tag)
         self.exists = self.checkExists() # check if pickle already exists
 
         # Get input files (output of previous step)
         if self.prev != False:
-            self.input_file = '%sFastSim_%s.root'%(self.prev.localsavedir, self.prev.stepname if self.stepname not in ['BTAGVAL','TRACKVAL'] else 'AOD_inDQM')
+            
+            self.input_file = '%sFastSim_%s_%s.root'%(self.prev.localsavedir, self.prev.stepname,self.tag if self.stepname not in ['BTAGVAL','TRACKVAL'] else self.tag+'_inDQM')
             # If crab, hadd together locally from EOS
             if self.prev.crab:
                 self.crabWait()
@@ -51,7 +53,7 @@ class Maker(object):
             self.eosPath = None
         # Still setup cmsRun file
         else:
-            self.cmsRun_file = '%s/FastSimValidation_%s.py'%(stepname,stepname)
+            self.cmsRun_file = '%s/FastSimValidation_%s_%s.py'%(stepname,stepname,self.tag)
 
     # Save out obj to pickle
     def save(self):
@@ -132,8 +134,7 @@ class MakeAOD(Maker):
             '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
-            '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM',
-            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD.root'%(self.localsavedir if not self.crab else '')
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag)
         ]
 
     def run(self):
@@ -157,7 +158,7 @@ class MakeBtagVal(Maker):
 
     def run(self):
         self.run_gen()
-        helper.executeCmd('mv DQM_V0001_R000000001__Global__CMSSW_X_Y_Z__RECO.root %sharvest.root'%(self.localsavedir if not self.crab else ''))
+        helper.executeCmd('mv DQM_V0001_R000000001__Global__CMSSW_X_Y_Z__RECO.root %sharvest_%s.root'%(self.localsavedir if not self.crab else '',self.tag))
 
 #### Track validation 
 class MakeTrackVal(Maker):
@@ -167,7 +168,7 @@ class MakeTrackVal(Maker):
         
     def run(self):
         if self.prev.crab: self.crabWait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks.root'%(self.input_file,self.localsavedir)
+        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks_%s.root'%(self.input_file,self.localsavedir,self.tag)
         helper.executeCmd(harvest_cmd)
 
 ## MiniAOD production
@@ -183,7 +184,8 @@ class MakeMiniAOD(Maker):
             '--era Run2_2016', '--beamspot Realistic50ns13TeVCollision',
             '--datatier MINIAODSIM', '--eventcontent MINIAODSIM',
             '-s PAT', 
-            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_MINIAOD.root'%(self.localsavedir if not self.crab else ''), '--runUnscheduled']
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_MINIAOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag), '--runUnscheduled']
+        self._addExtraOptions(options)
 
     def run(self):
         self.run_gen()
@@ -201,7 +203,7 @@ class MakeNanoAOD(Maker):
             '--era Run2_2016,run2_nanoAOD_102Xv1', '--beamspot Realistic50ns13TeVCollision',
             '--datatier NANOAODSIM', '--eventcontent NANOAODSIM',
             '-s NANO', 
-            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_NANOAOD.root'%(self.localsavedir if not self.crab else ''), 
+            '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_NANOAOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag), 
             '''--customise_commands="process.add_(cms.Service('InitRootHandlers',EnableIMT=cms.untracked.bool(False)))"'''
         ]
 
