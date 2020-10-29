@@ -15,6 +15,10 @@ parser.add_option("--steps", type='string', action="store",
                 dest    =   "steps",
                 help    =   "Comma separated list of steps. Possible are AOD,TRACKVAL,MINIAOD,BTAGVAL,NANOAOD,ANALYSIS,ALL.")
 # Provided defaults
+parser.add_option("--bypassChecks", action="store_true", 
+                default =   False,
+                dest    =   "bypassChecks",
+                help    =   "Bypass check to see previous version finished (useful if most crab jobs are finished)")
 parser.add_option("--SCRAM", action="store_true", 
                 default =   False,
                 dest    =   "scram",

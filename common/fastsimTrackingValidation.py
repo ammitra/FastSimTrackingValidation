@@ -28,6 +28,9 @@ class Maker(object):
         self.picklename = '%s%s_%s.p'%(self.localsavedir, self.stepname,self.tag)
         self.exists = self.checkExists() # check if pickle already exists
 
+        # Skip checkDone?
+        self.skipCheckDone = options.bypassChecks
+
         # Get input files (output of previous step)
         if self.prev != False:
             
@@ -90,7 +93,7 @@ class Maker(object):
 
     # Wait for crab job that self relies on to finish
     def crabWait(self):
-        if self.prev != False:
+        if self.prev != False and not self.skipCheckDone:
             doneBool,crabInfo = self.prev.checkDone()
             while not doneBool:
                 stati = crabInfo['jobsPerStatus']
