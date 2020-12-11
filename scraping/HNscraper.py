@@ -1,5 +1,5 @@
-# Usage as 
-# grep '<text in post title>' | python HNscraper.py
+# Typical usage is 
+# grep '<text in post title>' scraper/relvalHN.html | python HNscraper.py --find "myString"
 # Must fill in UserID and Password in HNinfo.py for hypernews
 import requests, sys, HNinfo, optparse
 requests.packages.urllib3.disable_warnings()
