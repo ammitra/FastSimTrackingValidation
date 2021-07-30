@@ -32,7 +32,7 @@ def handleOptions(optparser):
         'beamspot': 'Realistic25ns13TeVEarly2018Collision'
         # 'datamix': 'PreMix',
         # 'procModifiers': 'premix_stage2',
-        # 'pileup_input': 'das:/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_4-PU25ns_106X_upgrade2018_realistic_v9_FastSim-v1/PREMIX',
+        # 'pileup_input': 'das:/RelValFS_PREMIXUP18_PU50/CMSSW_10_6_4-PU25ns_106X_upgrade2018_realistic_v9_FastSim-v1/PREMIX'
     }
 
     if options.config != '': 

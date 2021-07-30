@@ -2,7 +2,6 @@ from CRABAPI.RawCommand import crabCommand
 
 import cmsDriverAPI, pickle, os, time, sys
 import fastsimTrackingHelpers as helper
-import nanoValidation
 
 from collections import OrderedDict
 
@@ -104,6 +103,7 @@ class Maker(object):
                 doneBool,crabInfo = self.prev.checkDone()
 
     def run_gen(self):
+        print (self.cmsDriver_args)
         helper.MakeRunConfig(self.cmsDriver_args)
         if not os.path.exists(self.cmsRun_file):
             raise Exception('%s was not created.'%self.cmsRun_file)   
@@ -125,10 +125,21 @@ class Maker(object):
         self.eosPath = '%s/%s/%s/%s/0000/'%(self.crab_config.Data.outLFNDirBase, self.crab_config.Data.outputPrimaryDataset, self.crab_config.Data.outputDatasetTag, request_time_data)#, self.crab_config.JobType.psetName)
         return self.eosPath
 
-    def _addExtraOptions(self,options):
+    def _addExtraOptions(self,options,step=None):
+        if step == 'AOD': extra_option_types = ["datamix","procModifiers","pileup_input","geometry","pileup"]
+        else: extra_option_types = []
         if options.cmsDriver != '':
-            for o in options.cmsDriver.split(' -'):
-                self.cmsDriver_args.append(' -'+o)
+            for o in options.cmsDriver.split('--'):
+                if o.strip() == '': continue
+                self.cmsDriver_args.append('--'+o.strip())
+        for o in extra_option_types:
+            if hasattr(options,o):
+                self.cmsDriver_args.append('--'+o.strip()+'='+getattr(options,o))
+                if 'datamix' in o: # Need to add DATAMIX before L1 is using pileup
+                    for i,a in enumerate(self.cmsDriver_args):
+                        if '-s ' in a:
+                            insert_idx = a.find('L1,')
+                            self.cmsDriver_args[i] = a[:insert_idx]+'DATAMIX,'+a[insert_idx:]
 
 # Fastsim AOD production
 class MakeAOD(Maker):
@@ -142,10 +153,26 @@ class MakeAOD(Maker):
             '--fast', '-n '+options.nevents, '--nThreads 1',
             '--era '+options.era, '--beamspot '+options.beamspot,
             '--datatier AODSIM,DQMIO', '--eventcontent AODSIM,DQM',
-            '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,EI,VALIDATION:@standardValidation,DQM:@standardDQM', # Need to add DATAMIX before L1 is using pileup
+            # '-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,VALIDATION:@standardValidation,DQM:@standardDQM', 
             '--python_filename '+self.cmsRun_file, '--fileout %sFastSim_AOD_%s.root'%(self.localsavedir if not self.crab else '',self.tag)
         ]
-        self._addExtraOptions(options)
+
+        if 'Configuration' in options.cfi:
+            with open('../'+options.cfi,'r') as cfi:
+                runLHE = False
+                for l in cfi.readlines():
+                    if 'ExternalLHEProducer' in l:
+                        runLHE = True
+                        break
+        else:
+            runLHE = False
+            
+        if not runLHE:
+            self.cmsDriver_args.append('-s GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,VALIDATION:@standardValidation,DQM:@standardDQM')
+        else:
+            self.cmsDriver_args.append('-s LHE,GEN,SIM,RECOBEFMIX,DIGI:pdigi_valid,L1,DIGI2RAW,L1Reco,RECO,VALIDATION:@standardValidation,DQM:@standardDQM')
+
+        self._addExtraOptions(options,step='AOD')
 
     def run(self):
         self.run_gen()
@@ -176,11 +203,25 @@ class MakeTrackVal(Maker):
     """docstring for MakeTrackVal"""
     def __init__(self, AODobj,options):
         super(MakeTrackVal, self).__init__('TRACKVAL',AODobj,options)
+
+        self.crab = False
+        self.cmsDriver_args = [
+            '--filein file:%s'%(self.input_file), '--mc',
+            '--conditions '+options.conditions, '--scenario pp',
+            '-n -1', '--nThreads 1',
+            '--era '+options.era,
+            '-s HARVESTING:@trackingOnlyValidation+@trackingOnlyDQM+postProcessorHLTtrackingSequence',
+            '--python_filename '+self.cmsRun_file,
+            '--filetype DQM'#, '--fileout %s
+        ]
+
+        if options.customise != '':
+            self.cmsDriver_args.append('--customise '+options.customise)
         
     def run(self):
         if self.prev.crab: self.crabWait()
-        harvest_cmd = 'harvestTrackValidationPlots.py %s -o %sharvestTracks_%s.root'%(self.input_file,self.localsavedir,self.tag)
-        helper.executeCmd(harvest_cmd)
+        self.run_gen()
+        helper.executeCmd('mv DQM_V0001_R000000001__Global__CMSSW_X_Y_Z__RECO.root %sFastSim_harvest_%s.root'%(self.localsavedir if not self.crab else '',self.tag))
 
 ## MiniAOD production
 class MakeMiniAOD(Maker):

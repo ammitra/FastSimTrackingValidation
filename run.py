@@ -43,6 +43,10 @@ parser.add_option('--cmssw', metavar='F', type='string', action='store',
                 default =   'CMSSW_10_6_12',
                 dest    =   'cmssw',
                 help    =   'CMSSW release to use')
+parser.add_option('--customise', metavar='F', type='string', action='store',
+                default =   '',
+                dest    =   'customise',
+                help    =   '--customise command to cmsDriver')
 parser.add_option('--storageSite', metavar='F', type='string', action='store',
                 default =   'T3_US_FNALLPC',
                 dest    =   'storageSite',

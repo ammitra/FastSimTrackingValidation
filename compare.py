@@ -38,12 +38,12 @@ def BtagValPlotting(valdirs,names):
         helper.executeCmd(plotFactory_cmd,bkg=False)
 
 def TrackValPlotting(valdirs,names):
-    trackval_cmd = 'makeTrackValidationPlots.py -o tracking_plots'
+    trackval_cmd = 'makeTrackValidationPlots.py -o tracking_plots '
     for i,d in enumerate(valdirs):
         if '.root' in d:
             trackval_cmd+=' ../%s'%(d)
         else:
-            trackval_cmd+=' ../%s/FastSimValWorkspace/TRACKVAL/harvestTracks_%s.root'%(d,names[i])
+            trackval_cmd+=' ../%s/FastSimValWorkspace/TRACKVAL/FastSim_harvest_%s.root'%(d,names[i])
     helper.executeCmd(trackval_cmd,bkg=False)
 
 def AnalysisPlotting(valdirs,names):
