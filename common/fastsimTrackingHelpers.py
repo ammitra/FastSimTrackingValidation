@@ -4,7 +4,7 @@ except ImportError as e:
     print('Cannot import CRABClient. Please try sourcing crab-setup (in bash: `source /cvmfs/cms.cern.ch/common/crab-setup.sh`)')
     raise e
 from CRABClient.UserUtilities import config
-import cmsDriverAPI, pickle, os, json
+import cmsDriverAPI, pickle, os, json, sys
 
 import json, subprocess
 from contextlib import contextmanager
