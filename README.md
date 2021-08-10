@@ -63,8 +63,8 @@ An example command to use one of these:
 python FastSimTrackingValidation/run.py -c payload_nopu.json --tag=Ttbar2018NoPU
 ```
 
-Note that the `dir` option is a relative path to an existing directory
-which houses a `cmssw` area (release specified by the `cmssw` option)
+Note that the `dir` option is a path to an existing directory
+which houses a CMSSW area (release specified by the `cmssw` option)
 which is prepared to generate events.
 The `dir` and `cmssw` are separated in the case that one `dir` holds multiple
 CMSSW releases to be tested.
