@@ -15,7 +15,9 @@ cp FastSimTrackingValidation/extras/validation-tools_setup.py Validation-Tools/s
 pip install -e Validation-Tools/
 ```
 
-The primary script to run workflows is `run.py`. The script takes several options
+## Event generation
+
+The primary script to run event generation workflows is `run.py`. The script takes several options
 which will control the multi-step workflow. These options can be provided via the command line
 or via a "payload" in JSON format with entries that correspond to the command line options.
 The payload is specified with command line option `-c`.
@@ -72,6 +74,10 @@ and run the `steps` specified using `cmsDriver` commands with the options specif
 Default options are specified so be sure to check the cmsRun config outputs to check that the final
 commands used match what you intended to run.
 
+Finally, there is an additional step that can be included called `ANALYSIS`. This is intended
+for processing the output NanoAOD but does not currently do anything. It could be further developed
+for NanoAOD level analysis using RDataFrame.
+
 ### Generating with custom changes
 
 In order to generate events with custom private changes made to the CMSSW code base,
@@ -91,6 +97,23 @@ my credentials beyond the default `storageSite` option value of "T3_US_FNALLPC")
 Note that even if you are not using CRAB, you will be required to run `source /cvmfs/cms.cern.ch/common/crab-setup.sh`
 at least once so that the API can be imported still. If you forget this, there will be a message explaining this
 and reminding you of the command.
+
+## Comparing different workflow results
+Two standard validation sequences can be used to plot comparisons between different generated samples:
+tracking validation and b-tagging validation. Both are accessible via the `compare.py` utility.
+
+An example command:
+```
+python FastSimTrackingValidation/compare.py --tag=FastSim_vs_2018ULResHistsWIDE__Ttbar2018noPU -d ../../BaseFastSim/CMSSW_10_6_4/src/,../../FastSim_2018ULResHists_WIDE/CMSSW_10_6_4/src/ -n Ttbar2018NoPU,Ttbar2018NoPU -s TRACKVAL,BTAGVAL
+```
+
+- `--tag` specifies a tame for the output folder where plots will be stored and can have any name.
+- `-d` is a comma-separated list of `src/` directories to search for the generated files. One can also provide the
+path to a specific ROOT file (like an official RelVal) to use instead
+- `-n` is a comma-separated list of the `tag`s used in `run.py`. These should be in the same order as the `-d` list so
+that the correct files corresponding to the CMSSW version and tag can be combined to grab the right files.
+- `-s` the "steps" to perform. In this example, do both tracking and b-tagging validation plots. There is a third `ANALYSIS`
+option which does not currently work but is intended to do NanoAOD level comparisons of the `ANALYSIS` level output from `run.py`.
 
 ## Web scraping for RelVals
 Finding existing RelVels is relatively frustrating. Most annoying is that the existing HyperNews
