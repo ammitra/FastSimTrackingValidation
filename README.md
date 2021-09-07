@@ -15,6 +15,9 @@ cp FastSimTrackingValidation/extras/validation-tools_setup.py Validation-Tools/s
 pip install -e Validation-Tools/
 ```
 
+In addition to this one time setup, each time you login, you should run `source /cvmfs/cms.cern.ch/crab3/crab.sh`.
+If you forget, an exception will be raised with a reminder to run this command before trying again.
+
 ## Event generation
 
 The primary script to run event generation workflows is `run.py`. The script takes several options
@@ -34,7 +37,7 @@ An example payload for a 2018UL ttbar workflow with no pileup:
     "steps":"AOD,TRACKVAL,BTAGVAL,MINIAOD,NANOAOD",
     "crab":false,
     "cfi":"TTbar_13TeV_TuneCUETP8M1_cfi",
-    "cmssw":"CMSSW_10_6_4",
+    "cmssw":"CMSSW_10_6_14",
     "conditions": "auto:phase1_2018_realistic",
     "era": "Run2_2018_FastSim",
     "beamspot": "Realistic25ns13TeVEarly2018Collision"
@@ -48,7 +51,7 @@ An example payload for a 2018UL ttbar workflow **with** pileup:
     "steps":"AOD,TRACKVAL,BTAGVAL,MINIAOD,NANOAOD",
     "crab":false,
     "cfi":"TTbar_13TeV_TuneCUETP8M1_cfi",
-    "cmssw":"CMSSW_10_6_4",
+    "cmssw":"CMSSW_10_6_14",
     "conditions": "auto:phase1_2018_realistic",
     "era": "Run2_2018_FastSim",
     "beamspot": "Realistic25ns13TeVEarly2018Collision",
@@ -58,18 +61,13 @@ An example payload for a 2018UL ttbar workflow **with** pileup:
 }
 ```
 
-An example command to use one of these:
-```
-python FastSimTrackingValidation/run.py -c payload_nopu.json --tag=Ttbar2018NoPU
-```
-
 Note that the `dir` option is a path to an existing directory
 which houses a CMSSW area (release specified by the `cmssw` option)
 which is prepared to generate events.
 The `dir` and `cmssw` are separated in the case that one `dir` holds multiple
 CMSSW releases to be tested.
 
-For either of the above example payloads, the `run.py` will change to `../../BaseFastSim/CMSSW_10_6_4/src`
+For either of the above example payloads, the `run.py` will change the working directory to `../../BaseFastSim/CMSSW_10_6_4/src`
 and run the `steps` specified using `cmsDriver` commands with the options specified in the payload.
 Default options are specified so be sure to check the cmsRun config outputs to check that the final
 commands used match what you intended to run.
@@ -77,6 +75,11 @@ commands used match what you intended to run.
 Finally, there is an additional step that can be included called `ANALYSIS`. This is intended
 for processing the output NanoAOD but does not currently do anything. It could be further developed
 for NanoAOD level analysis using RDataFrame.
+
+An example command to use one of these:
+```
+python FastSimTrackingValidation/run.py -c payload_nopu.json --tag=Ttbar2018NoPU
+```
 
 ### Generating with custom changes
 
