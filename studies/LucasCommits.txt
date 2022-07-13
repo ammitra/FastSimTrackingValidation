@@ -1,0 +1,94 @@
+commit 081af5bbd96afb26030c82c3f29ca9fafe7ecea1
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 12 15:29:29 2021 -0500
+
+    Whitespace formatting fixed
+
+commit 04f799f0e8f3174f70a5aa848fa73cdfe0bb7e48
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 12 15:16:09 2021 -0500
+
+    Fix ignore_multi nesting and histCheck logic.
+    
+    - Histograms would only be grabbed if ignore_multi == false
+    - histCheck only returned two "states" but needs three
+
+commit a3207a3e4f53eb125abc01ce15dd93af911eb701
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Sun Aug 8 20:47:18 2021 -0500
+
+    Fix code formatting PixelResolutionHistograms.cc
+
+commit 831a149c96b69b736b2042b6a615f6997411c55b
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Sun Aug 8 20:34:26 2021 -0500
+
+    Fix bin edge issues
+
+commit 1204004ded5b6ae1153dc4ca38bace8fe75aab72
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Fri Aug 6 08:33:23 2021 -0500
+
+    Code style changes
+
+commit 0bd7f69091fbb4fd1bf9c7a34db805846ff82719
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 5 21:28:26 2021 -0500
+
+    Move to individual cfi files
+
+commit 0feaf1d5b823c7259806c9521b8a931c42cc82c3
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 5 12:02:24 2021 -0500
+
+    Revert Reconstruction_BefMix changes
+
+commit 10a80b96411dedeb7f474d12bc84872e61104d97
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 5 11:58:47 2021 -0500
+
+    Go back to using hard-coded bool
+
+commit e26e4d0490d28f69d0fce5a889243565498ebaeb
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 5 11:58:22 2021 -0500
+
+    Fix PRH compile errors
+
+commit 392313268d8e4791adc9ab61c3cf6b1d859b6b7a
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Thu Aug 5 11:57:36 2021 -0500
+
+    Add 2016 plaq/module select
+
+commit a506c4359d8ebcc22f56f9f6e7aa1b5fc765d8df
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Wed Aug 4 14:09:39 2021 -0500
+
+    Create two EDProducers instead
+
+commit d8ad701aae24e83ceca63bec9498ee6ed6a9afc7
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Wed Aug 4 13:51:35 2021 -0500
+
+    Add flag instead of commented code
+
+commit c6ca728a6f7d3925e8896bffdf6cef15a581efcc
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Wed Aug 4 13:04:37 2021 -0500
+
+    Add PixelResolutionHistograms changes
+    
+    - Adds variable cotAlpha cotBeta bin widths
+
+commit 2f964cdceb1d175786abd69bcfad7cdac26a19b6
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Wed Aug 4 11:30:07 2021 -0500
+
+    Use new UL resolution histos
+
+commit 5af2ea295c3233b9d9bede9ce044a31333ff1e8a
+Author: Lucas Corcodilos <lcorcodi@cern.ch>
+Date:   Wed Aug 4 11:10:31 2021 -0500
+
+    Add initial PixelPluginsUL_cfi.py draft
